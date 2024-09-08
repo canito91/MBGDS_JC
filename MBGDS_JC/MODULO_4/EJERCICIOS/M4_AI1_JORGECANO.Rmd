@@ -1,0 +1,159 @@
+
+---
+title:    "Ejercicio práctico Análisis Factorial"
+license:  by-nc-sa
+urlcolor: blue
+output:
+  word_document:  default
+  html_document: 
+    theme:        cosmo 
+    highlight:    tango 
+    toc:          true
+    toc_float:    true
+    code_folding: show
+  epuRate::epurate:
+    toc:             TRUE
+    number_sections: FALSE
+    code_folding:    "show"
+  pdf_document:   default
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+# 1. Planteamiento del problema
+
+Para este ejercicio nos enfocaremos en un set de datos que representa la calidad de distintos tipos de vino tinto portugués. Dicha calidad se determina en función de distintos atributos que caracterizan cada tipo de vino. Mediante el Análisis Factorial, exploraremos la posibilidad de clasificarlos en base a distintas caracter�?sticas del propio vino, tales como el porcentaje de alcohol o su densidad.
+
+El subconjunto de variables del dataset original que utilizaremos son las siguientes:
+
+* **residual.sugar**: la cantidad de azúcar que queda después de la fermentación, es raro encontrar vinos con menos de 1 gramo/litro y los vinos con más de 45 gramos/litro se consideran dulces.
+* **density**: la densidad del vino se aproxima a la del agua en función del porcentaje de alcohol y del contenido de azúcar.
+* **pH**: describe el grado de acidez o base de un vino en una escala de 0 (muy ácido) a 14 (muy básico); la mayor�?a de los vinos se sitúan entre 3 y 4 en la escala de pH.
+* **alcohol**: el porcentaje de alcohol que contiene el vino.
+* **citric.acid**: encontrado en pequeñas cantidades, el ácido c�?trico puede añadir frescura y sabor a los vinos.
+* **volatile.acidity**: la cantidad de ácido acético en el vino, que en niveles demasiado altos puede producir un sabor desagradable a vinagre.
+
+Podr�s encontrar el dataset en el apartado de 'Material Complementario', carpeta Data con el nombre: 4.2_PCA_AF_ejercicio.csv. As� pues, lo primero que haremos ser� cargar el dataset en R.
+
+As�? pues, lo primero que haremos es cargar el dataset en R:
+
+```{r,warning=FALSE,message=FALSE}
+# Carga del dataset
+
+```
+
+## 1.1 Preparación del dataset.
+
+Tal y como podrás comprobar, el dataset contiene variables que no necesitamos para el ejercicio, por lo que hay que seleccionar únicamente las definidas en el apartado anterior.
+
+* **Ejercicio 1**: Selecciona las variables a utilizar definidas en el apartado anterior del dataset original.
+
+```{r,warning=FALSE,message=FALSE}
+# Indexo variables necesarias para el ejercicio
+
+```
+
+## 1.2 Análisis Factorial.
+
+Una vez dispongas del dataset preparado, realiza el Análisis Factorial para 2 factores utilizando la función factanal.
+
+```{r}
+# Cálculo del Análisis de Factores
+
+```
+
+* **Ejercicio 2**: Podr�?as indicar qué variables no están bien representadas por los factores? Justifica tu respuesta
+
+```{r}
+print('Indica aqu�? tu respuesta')
+```
+
+* **Ejercicio 3**: Imprime la singularidad de cada variable. 
+
+```{r}
+# Singularidad de cada variable
+
+```
+
+* **Ejercicio 4**: ¿Qué variables están contribuyendo más a cada uno de los factores? Justifica tu respuesta.
+
+```{r}
+print('Indica aqu�? tu respuesta')
+```
+
+* **Ejercicio 5**: ¿Qué proporción de la varianza está explicada por cada factor? Siguiendo la regla de Kaiser, mantendr�?as los dos factores?
+
+```{r}
+print('Indica aqu�? tu respuesta')
+```
+
+## 1.3 Matriz de Residuos.
+
+* **Ejercicio 6**: Imprime la matriz de residuos e interpreta los resultados.¿Qué variables están mejor representadas en los factores según los valores de la matriz?
+
+```{r}
+# Matriz de cargas
+
+# Matriz de singularidades
+
+# Matriz de correlaciones observada
+
+# Creación de la matriz de correlaciones ajustada
+
+# Creación de la matriz de residuos
+
+```
+
+## 1.4 Interpretación de los factores.
+
+* **Ejercicio 7**: Ajusta tres modelos factoriales, uno sin rotación, uno con rotación varimax y uno con rotación promax, y haz una gráfica de dispersión del factor 1 y el 2 para cada uno de ellos. Representa el valor de cada punto con el nombre de la variable.
+
+```{r}
+# Creación de 3 modelos distintos modificando la rotación
+
+# Definición del output gráfico (3 gráficos en 1 fila)
+
+# Primer gráfico: sin rotación
+
+# Texto de color rojo para el gráfico primero
+
+# Segundo gráfico: rotacion = varimax
+
+# Texto de color azul para el gráfico segundo
+
+# Tercer gráfico: rotacion = promax
+
+# Texto de color negro para el gráfico tercero
+
+```
+
+* **Ejercicio 8**: Interpreta los resultados. Podr�?as indicar qué caracter�?sticas representan mejor al factor 1 y al factor 2 y como se podr�?a interpretar en función del significado que contienen? Si tuvieras que darle un nombre comercial a cada uno de los dos factores, que nombres les otorgar�?as?
+
+```{r}
+print('Indica aqu�? tu respuesta')
+```
+
+## 1.4 Puntuación del del ejercicio
+
+Este ejercicio se puntuará con 10 puntos, siendo el m�?nimo necesario para superar la prueba de 5 puntos.
+
+La puntuación es la siguiente:
+
+* Ejercicio 1: 0.5 punto
+
+* Ejercicio 2: 0.75 puntos
+
+* Ejercicio 3: 0.75 puntos
+
+* Ejercicio 4: 1.5 puntos
+
+* Ejercicio 5: 1 puntos
+
+* Ejercicio 6: 1 punto
+
+* Ejercicio 7: 1.5 puntos
+
+* Ejercicio 8: 3 puntos
