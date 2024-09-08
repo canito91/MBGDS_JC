@@ -4,18 +4,18 @@ title:    "Ejercicio práctico Análisis Factorial"
 license:  by-nc-sa
 urlcolor: blue
 output:
-  word_document:  default
   html_document: 
     theme:        cosmo 
     highlight:    tango 
     toc:          true
     toc_float:    true
     code_folding: show
+  pdf_document:   default
   epuRate::epurate:
     toc:             TRUE
     number_sections: FALSE
     code_folding:    "show"
-  pdf_document:   default
+  word_document:  default
 ---
 
 <style>
@@ -25,23 +25,25 @@ text-align: justify}
 
 # 1. Planteamiento del problema
 
-Para este ejercicio nos enfocaremos en un set de datos que representa la calidad de distintos tipos de vino tinto portugués. Dicha calidad se determina en función de distintos atributos que caracterizan cada tipo de vino. Mediante el Análisis Factorial, exploraremos la posibilidad de clasificarlos en base a distintas caracter�?sticas del propio vino, tales como el porcentaje de alcohol o su densidad.
+Para este ejercicio nos enfocaremos en un set de datos que representa la calidad de distintos tipos de vino tinto portugués. Dicha calidad se determina en función de distintos atributos que caracterizan cada tipo de vino. Mediante el Análisis Factorial, exploraremos la posibilidad de clasificarlos en base a distintas caracter??sticas del propio vino, tales como el porcentaje de alcohol o su densidad.
 
 El subconjunto de variables del dataset original que utilizaremos son las siguientes:
 
 * **residual.sugar**: la cantidad de azúcar que queda después de la fermentación, es raro encontrar vinos con menos de 1 gramo/litro y los vinos con más de 45 gramos/litro se consideran dulces.
 * **density**: la densidad del vino se aproxima a la del agua en función del porcentaje de alcohol y del contenido de azúcar.
-* **pH**: describe el grado de acidez o base de un vino en una escala de 0 (muy ácido) a 14 (muy básico); la mayor�?a de los vinos se sitúan entre 3 y 4 en la escala de pH.
+* **pH**: describe el grado de acidez o base de un vino en una escala de 0 (muy ácido) a 14 (muy básico); la mayor??a de los vinos se sitúan entre 3 y 4 en la escala de pH.
 * **alcohol**: el porcentaje de alcohol que contiene el vino.
-* **citric.acid**: encontrado en pequeñas cantidades, el ácido c�?trico puede añadir frescura y sabor a los vinos.
+* **citric.acid**: encontrado en pequeñas cantidades, el ácido c??trico puede añadir frescura y sabor a los vinos.
 * **volatile.acidity**: la cantidad de ácido acético en el vino, que en niveles demasiado altos puede producir un sabor desagradable a vinagre.
 
-Podr�s encontrar el dataset en el apartado de 'Material Complementario', carpeta Data con el nombre: 4.2_PCA_AF_ejercicio.csv. As� pues, lo primero que haremos ser� cargar el dataset en R.
+Podr?s encontrar el dataset en el apartado de 'Material Complementario', carpeta Data con el nombre: 4.2_PCA_AF_ejercicio.csv. As? pues, lo primero que haremos ser? cargar el dataset en R.
 
-As�? pues, lo primero que haremos es cargar el dataset en R:
+As?? pues, lo primero que haremos es cargar el dataset en R:
 
 ```{r,warning=FALSE,message=FALSE}
 # Carga del dataset
+
+dataset_vino <- X4_2_PCA_AF_ejercicio
 
 ```
 
@@ -53,7 +55,13 @@ Tal y como podrás comprobar, el dataset contiene variables que no necesitamos p
 
 ```{r,warning=FALSE,message=FALSE}
 # Indexo variables necesarias para el ejercicio
+library(datos)
 
+dt_acotado<-- dataset_vino %>% select (`residual sugar`,'density','pH','alcohol','citric acid','volatile acidity')
+
+str(dt_acotado)
+
+print('Todas las variables son numéricas y podemos calcular el análisis factorial')
 ```
 
 ## 1.2 Análisis Factorial.
@@ -63,12 +71,26 @@ Una vez dispongas del dataset preparado, realiza el Análisis Factorial para 2 f
 ```{r}
 # Cálculo del Análisis de Factores
 
+dt_vino.fa <- factanal(x = dt_acotado, factors = 2)
+
+
+print(dt_vino.fa)
+
+
 ```
 
-* **Ejercicio 2**: Podr�?as indicar qué variables no están bien representadas por los factores? Justifica tu respuesta
+* **Ejercicio 2**: Podr??as indicar qué variables no están bien representadas por los factores? Justifica tu respuesta
 
 ```{r}
-print('Indica aqu�? tu respuesta')
+
+
+print('Las variables que peor están representadas por los factores corresponden a los
+valores mas bajos. Para no perder información, realizo un prin loadings para informar 5 decimales y no perder información, pues en caso contrario perdería los valores inferiores a 0.1')
+
+print(dt_vino.fa, digits = 5, cutoff = 0.0049, sort = FALSE)
+
+print('Las variables que no están bien representadas por los factores son residual sugar y, en menor medida, ph y alcohol debido a sus bajas cargas en uno o ambos factores. He considerado que una carga está bien considerada al superar el valor en absoluto de 0.5 .Podríamos mejorar la representación ajustando el número de factores o valorar posibles rotaciones')
+
 ```
 
 * **Ejercicio 3**: Imprime la singularidad de cada variable. 
@@ -76,18 +98,35 @@ print('Indica aqu�? tu respuesta')
 ```{r}
 # Singularidad de cada variable
 
+print('La singularidad, a veces definida como el ruido, corresponde a la
+proporción de la variabilidad que no puede ser explicada como una combinación lineal entre los
+factores. Este valor se corresponde con el valor de Ψ visto en la ecuación anterior. Una alta singularidad para una variable indica que los factores no representan bien su varianza.')
+
+print('En el dataset observamos')
+
+dt_vino.fa$uniquenesses
+
 ```
 
 * **Ejercicio 4**: ¿Qué variables están contribuyendo más a cada uno de los factores? Justifica tu respuesta.
 
 ```{r}
-print('Indica aqu�? tu respuesta')
+print('Factor 1 está principalmente definido por citric acid (0.98655), volatile acidity (-0.58348), y pH (-0.51378). Factor 2 está principalmente definido por density (0.97186) y alcohol (-0.55513).')
 ```
 
-* **Ejercicio 5**: ¿Qué proporción de la varianza está explicada por cada factor? Siguiendo la regla de Kaiser, mantendr�?as los dos factores?
+* **Ejercicio 5**: ¿Qué proporción de la varianza está explicada por cada factor? Siguiendo la regla de Kaiser, mantendr??as los dos factores?
 
 ```{r}
-print('Indica aqu�? tu respuesta')
+print('El cuarto output muestra la proporción de la varianza explicada por cada factor, así como la puntuación de cada uno de ellos. En la fila “Cumulative Var”,
+se muestra la proporción acumulativa de la varianza
+explicada en rango 0-1. En la fila “Proportion Var”, se
+muestra la proporción de la varianza explicada por cada
+factor, individualmente. En la fila “SS loadings” se muestra
+la suma de cargas al cuadrado. Estos valores se suelen utilizar para determinar el valor de un factor en particular. Suele merecer la pena mantener un factor
+si su valor es mayor a 1. (regla de Kaiser).')
+
+print('Siguiendo la regla de Kaiser, mantendría ambos factores ya que ambos tienen SS loadings mayores que 1. Esto sugiere que ambos factores contribuyen significativamente a la explicación de la varianza total y deben incluirse en el modelo.')
+
 ```
 
 ## 1.3 Matriz de Residuos.
@@ -97,13 +136,26 @@ print('Indica aqu�? tu respuesta')
 ```{r}
 # Matriz de cargas
 
+lambda <- dt_vino.fa$loadings
+
 # Matriz de singularidades
+
+psi <- diag(dt_vino.fa$uniquenesses)
 
 # Matriz de correlaciones observada
 
+s <- dt_vino.fa$correlation 
+
 # Creación de la matriz de correlaciones ajustada
 
+sigma <- lambda %*% t(lambda) + psi
+
 # Creación de la matriz de residuos
+matriz_residuos <- round(s - sigma,6)
+
+print('Para interpretar la matriz de residuos, debemos analizar los valores cercanos a 0, pues será la mejor representación del concepto subyacente')
+
+print('En nuestro caso, las correlaciones mejor representadas (con residuos cercanos a cero) son las de las combinaciones density con citric acid y density con volatile acidity.')
 
 ```
 
@@ -114,31 +166,87 @@ print('Indica aqu�? tu respuesta')
 ```{r}
 # Creación de 3 modelos distintos modificando la rotación
 
-# Definición del output gráfico (3 gráficos en 1 fila)
-
-# Primer gráfico: sin rotación
-
-# Texto de color rojo para el gráfico primero
-
-# Segundo gráfico: rotacion = varimax
-
-# Texto de color azul para el gráfico segundo
-
-# Tercer gráfico: rotacion = promax
-
-# Texto de color negro para el gráfico tercero
+dt_vino.fa.none <- factanal(x = dt_acotado, factors = 2,rotation = "none")
+  
+dt_vino.fa.varimax <- factanal(x = dt_acotado, factors = 2,rotation = "varimax")
+  
+dt_vino.fa.promax <- factanal(x = dt_acotado, factors = 2,rotation = "promax")
 
 ```
 
-* **Ejercicio 8**: Interpreta los resultados. Podr�?as indicar qué caracter�?sticas representan mejor al factor 1 y al factor 2 y como se podr�?a interpretar en función del significado que contienen? Si tuvieras que darle un nombre comercial a cada uno de los dos factores, que nombres les otorgar�?as?
 
 ```{r}
-print('Indica aqu�? tu respuesta')
+# Configuración para dibujar 3 gráficos en una fila
+par(mfrow = c(1, 3))
+
+# Primer gráfico: sin rotación
+# Texto de color rojo para el gráfico primero
+plot(dt_vino.fa.none$loadings[, 1], 
+     dt_vino.fa.none$loadings[, 2],
+     xlab = "Factor 1",
+     ylab = "Factor 2",
+     ylim = c(-1, 1),
+     xlim = c(-1, 1),
+     main = "No rotation")
+text(dt_vino.fa.none$loadings[,1] - 0.08,
+     dt_vino.fa.none$loadings[,2] + 0.08,
+     labels = colnames(dt_acotado),
+     col = "red")
+abline(h = 0, v = 0)
+
+# Segundo gráfico: rotación varimax
+# Texto de color azul para el gráfico segundo
+plot(dt_vino.fa.varimax$loadings[, 1], 
+     dt_vino.fa.varimax$loadings[, 2],
+     xlab = "Factor 1",
+     ylab = "Factor 2",
+     ylim = c(-1, 1),
+     xlim = c(-1, 1),
+     main = "Varimax rotation")
+text(dt_vino.fa.varimax$loadings[,1] - 0.08,
+     dt_vino.fa.varimax$loadings[,2] + 0.08,
+     labels = colnames(dt_acotado),
+     col = "blue")
+abline(h = 0, v = 0)
+
+# Tercer gráfico: rotación promax
+# Texto de color negro para el gráfico tercero
+plot(dt_vino.fa.promax$loadings[, 1], 
+     dt_vino.fa.promax$loadings[, 2],
+     xlab = "Factor 1",
+     ylab = "Factor 2",
+     ylim = c(-1, 1),
+     xlim = c(-1, 1),
+     main = "Promax rotation")
+text(dt_vino.fa.promax$loadings[,1] - 0.08,
+     dt_vino.fa.promax$loadings[,2] + 0.08,
+     labels = colnames(dt_acotado),
+     col = "black")
+abline(h = 0, v = 0)
+
+par(mfrow = c(1, 1))
+
 ```
+
+* **Ejercicio 8**: Interpreta los resultados. Podr??as indicar qué caracter??sticas representan mejor al factor 1 y al factor 2 y como se podr??a interpretar en función del significado que contienen? Si tuvieras que darle un nombre comercial a cada uno de los dos factores, que nombres les otorgar??as?
+
+```{r}
+print('Para interpretar los resultados me basaré en los modelos factoriales con rotacion. Aquí expongo un pequeño contexto de los tipos de rotación Varimax y Promax')
+print('Varimax Rotation: Es la mejor opción si quieres una interpretación clara y no esperas que los factores estén correlacionados. Esta rotación facilita la comprensión al maximizar las diferencias entre los factores, haciendo que cada variable se asocie claramente con un solo factor.')
+
+print('Promax Rotation: Es recomendable si sospechas que los factores tienen alguna correlación o si buscas una interpretación más flexible. Es especialmente útil en situaciones donde es lógico que las variables tengan un cierto grado de interdependencia.')
+
+print('Si dos variables tienen grandes cargas para el mismo factor, entonces sabemos que tienen algo en común. Observando los gráficos arriba expuestos, podremos ver que el factor 1 representa mejor el ácido cítrico y el alcohol, pudiendo estar relacionado con el equilibrio del sabor, pues ambos potencian la acidez e intensidad del vino. El factor 2 viene mejor representado por las variables Density y Residual Sugar, siendo variables que tienen afectación en el cuerpo y en los tonos dulces que ofrece el vino')
+
+print('Nombre Factor 1: Equilibrio Sensorial')
+print('Nombre Factor 2: Cuerpo dulce')
+
+```
+
 
 ## 1.4 Puntuación del del ejercicio
 
-Este ejercicio se puntuará con 10 puntos, siendo el m�?nimo necesario para superar la prueba de 5 puntos.
+Este ejercicio se puntuará con 10 puntos, siendo el m??nimo necesario para superar la prueba de 5 puntos.
 
 La puntuación es la siguiente:
 
