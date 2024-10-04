@@ -4,13 +4,13 @@ title:    "Ejercicio práctico Análisis Factorial"
 license:  by-nc-sa
 urlcolor: blue
 output:
+  pdf_document:   default
   html_document: 
     theme:        cosmo 
     highlight:    tango 
     toc:          true
     toc_float:    true
     code_folding: show
-  pdf_document:   default
   epuRate::epurate:
     toc:             TRUE
     number_sections: FALSE
@@ -43,7 +43,16 @@ As?? pues, lo primero que haremos es cargar el dataset en R:
 ```{r,warning=FALSE,message=FALSE}
 # Carga del dataset
 
-dataset_vino <- X4_2_PCA_AF_ejercicio
+library(readr)
+
+# Leer el archivo desde la URL DE git
+url <- "https://raw.githubusercontent.com/canito91/MBGDS_JC/main/MBGDS_JC/MODULO_4/EJERCICIOS/Data/4.2_PCA_AF_ejercicio.csv"
+BBDD_VINO <- read_delim(url, delim = ";")
+
+
+dataset_vino <- BBDD_VINO
+
+head(dataset_vino)
 
 ```
 
@@ -55,9 +64,8 @@ Tal y como podrás comprobar, el dataset contiene variables que no necesitamos p
 
 ```{r,warning=FALSE,message=FALSE}
 # Indexo variables necesarias para el ejercicio
-library(datos)
 
-dt_acotado<-- dataset_vino %>% select (`residual sugar`,'density','pH','alcohol','citric acid','volatile acidity')
+dt_acotado<-- dataset_vino %>% select ('residual sugar','density','pH','alcohol','citric acid','volatile acidity')
 
 str(dt_acotado)
 
@@ -85,11 +93,11 @@ print(dt_vino.fa)
 
 
 print('Las variables que peor están representadas por los factores corresponden a los
-valores mas bajos. Para no perder información, realizo un prin loadings para informar 5 decimales y no perder información, pues en caso contrario perdería los valores inferiores a 0.1')
+valores mas bajos. Para no perder información, realizo un prin loadings para informar 5 decimales, pues en caso contrario perdería los valores inferiores a 0.1')
 
 print(dt_vino.fa, digits = 5, cutoff = 0.0049, sort = FALSE)
 
-print('Las variables que no están bien representadas por los factores son residual sugar y, en menor medida, ph y alcohol debido a sus bajas cargas en uno o ambos factores. He considerado que una carga está bien considerada al superar el valor en absoluto de 0.5 .Podríamos mejorar la representación ajustando el número de factores o valorar posibles rotaciones')
+print('Las variables que no están bien representadas por los factores son residual sugar y, en menor medida, ph y alcohol debido a sus bajas cargas en uno o ambos factores. Parto de la premisa que una carga está bien considerada al superar el valor en absoluto de 0.5 .Podríamos mejorar la representación ajustando el número de factores o valorar posibles rotaciones')
 
 ```
 
@@ -156,6 +164,8 @@ matriz_residuos <- round(s - sigma,6)
 print('Para interpretar la matriz de residuos, debemos analizar los valores cercanos a 0, pues será la mejor representación del concepto subyacente')
 
 print('En nuestro caso, las correlaciones mejor representadas (con residuos cercanos a cero) son las de las combinaciones density con citric acid y density con volatile acidity.')
+
+print(matriz_residuos)
 
 ```
 
