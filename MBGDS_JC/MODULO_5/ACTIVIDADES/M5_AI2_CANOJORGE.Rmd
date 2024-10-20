@@ -1,0 +1,361 @@
+---
+title: "M5_AI2_CANOJORGE"
+author: "JORGE CANO"
+date: "2024-10-12"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+#install.packages("earth")
+#library(earth)
+
+install.packages("gamlss")
+library(gamlss)
+
+install.packages("ggplot2")
+library(ggplot2)
+
+```
+
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# Cargar los datos desde la URL
+german_credit <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data")
+
+# Asignar nombres de columnas al conjunto de datos
+colnames(german_credit) <- c("chk_acct", "duration", "credit_his", "purpose", "amount",
+                             "saving_acct", "present_emp", "installment_rate", "sex", "other_debtor",
+                             "present_resid", "property", "age", "other_install", "housing",
+                             "n_credits", "job", "n_people", "telephone", "foreign", "response")
+
+# Ajustar la variable de respuesta para que sea binaria (0 y 1)
+german_credit$response <- german_credit$response - 1
+
+# Convertir la variable de respuesta en factor
+german_credit$response <- as.factor(german_credit$response)
+
+
+```
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+str(german_credit)
+sum(is.na(german_credit$duration))
+
+
+```
+
+
+## 1. Propón un modelo lineal logit en el que la variable respuesta (crédito bueno=0, crédito malo=1), lo expliquen el resto de variables.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# Ajustar el modelo logit utilizando todas las variables predictoras
+logit_model <- glm(response ~ ., data = german_credit, family = binomial(link = "logit"))
+
+# Resumen del modelo
+summary(logit_model)
+
+
+```
+# Para ver el grado de ajuste del modelo, calculamos la curva ROC y el AUC, obsevando que el ajuste es bastante bueno, concretamente con un AUC de (0.834), lo que nos sugiere que al ser valor cercano a 1 tenemos una mejor predicción que un modelo aleatorio. Una curva que se acerca más a la esquina superior izquierda (donde sensibilidad y especificidad son ambas altas) indica un mejor rendimiento de clasificación del modelo.
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Instalar y cargar el paquete pROC si no lo tienes
+install.packages("pROC")
+library(pROC)
+
+# Predecir probabilidades con el modelo logit
+probabilidades <- predict(logit_model, type = "response")
+
+# Crear la curva ROC y calcular el AUC
+roc_obj <- roc(german_credit$response, probabilidades)
+plot(roc_obj, col = "blue", main = "Curva ROC para el Modelo Logit")
+auc(roc_obj)  # Muestra el AUC en la consola
+
+```
+
+# Analisis de los residuos del modelo vs las probabilidades predichas
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+residuos_deviance <- residuals(logit_model, type = "deviance")
+
+# Calcular probabilidades predichas
+probabilidades_predichas <- predict(logit_model, type = "response")
+
+# Graficar residuos de deviance vs. probabilidades predichas
+plot(probabilidades_predichas, residuos_deviance,
+     xlab = "Probabilidades Predichas",
+     ylab = "Residuos de Deviance",
+     main = "Residuos de Deviance vs. Probabilidades Predichas")
+abline(h = 0, col = "red")
+
+
+```
+
+
+## 2. Interpreta la variable duration. ¿Es significativa? ¿A partir de qué nivel de significación deja de ser significativa?
+
+# Dado que la variable mantiene una elevada correlación con otras variables (0.65 con amount) y no está mostrando los resultado, forzamos que salga informados informando en la GLM las variables a considerar. Para confirmar esta teoría aplicamos la matriz de correlación:
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+
+# Calcular matriz de correlación para variables numéricas
+numeric_vars <- german_credit[sapply(german_credit, is.numeric)]
+cor(numeric_vars)
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+logit_model_dur <- glm(response ~ duration + chk_acct + credit_his + purpose + amount + saving_acct +
+                   present_emp + installment_rate + sex + other_debtor + present_resid + property +
+                   age + other_install + housing + n_credits + job + n_people + telephone + foreign,
+                   data = german_credit, family = binomial(link = "logit"))
+#summary(logit_model_dur)
+
+# Extraer los coeficientes del modelo
+coef_summary <- summary(logit_model_dur)$coefficients
+
+# Mostrar solo la fila correspondiente a la variable "duration"
+coef_summary["duration", ]
+
+
+```
+# Para la variable duration, observamos un P valor de 0.0027, siendo inferior a P<0.05 podemos considerarlo significativa la variable. En concreto con este valor lo podemos considerar muy significativo, lo que representa que valor sea producto del azar es muy bajo. Para contestar el nivel de consideración de significación debemos contextualizar el estudio que estemos realizando, siendo más críticos en ensayos médicos que en otro tipo de estudios no tan determinantes, donde podemos aceptar P valores < a 0.1.
+# Otro contraste que podemos realizar es analizando el z value, donde con un valor cercano a 3 (2.99) nos indica una alta significancia con el coeficiente. Por otro lado el signo positivo, nos indica que la observación se encuentra por encima del valor de la media.
+
+## 3. Si eliminamos la variable amount del modelo, ¿crees que alguna otra variable incrementaría el sesgo provocado por la falta de amount en el modelo? Es decir, identifica el sesgo en otra variable producido por eliminar la variable amount.
+
+# Si omitimos la variable amount del modelo, observamos un cambio significativo en el intercepto, lo que implica un potencial sesgo al incluir esta variable.
+
+# A continuación muestro en formato tabla y gráficamente los impactos de omitir la variable.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Ajustar el modelo logit con todas las variables (incluyendo amount)
+# modelo_con_amount <- glm(response ~ ., data = german_credit, family = binomial)
+
+# Resumen del modelo con amount
+summary(logit_model)
+
+# Guardar los coeficientes del modelo con amount
+coef_con_amount <- coef(logit_model)
+
+# Ajustar el modelo logit sin la variable amount
+modelo_sin_amount <- glm(response ~ . - amount, data = german_credit, family = binomial(link = "logit"))
+
+# Resumen del modelo sin amount
+summary(modelo_sin_amount)
+
+# Guardar los coeficientes del modelo sin amount
+coef_sin_amount <- coef(modelo_sin_amount)
+
+# Comparar los coeficientes de ambos modelos
+comparacion_coeficientes <- data.frame(
+  Variable = names(coef_con_amount),
+  Con_Amount = coef_con_amount,
+  Sin_Amount = coef_sin_amount[names(coef_con_amount)]
+)
+
+# Calcular la diferencia en los coeficientes
+comparacion_coeficientes$Diferencia <- comparacion_coeficientes$Sin_Amount - comparacion_coeficientes$Con_Amount
+
+# Mostrar la comparación
+print(comparacion_coeficientes)
+
+
+
+```
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# Graficar la diferencia en coeficientes
+ggplot(comparacion_coeficientes, aes(x = Variable, y = Diferencia)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Cambio en los Coeficientes al Eliminar amount",
+       x = "Variable", y = "Diferencia en Coeficiente") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+
+## 4. Identifica efectos no lineales en la variable duration y amount. Interpreta los nuevos resultados después de meter, en el modelo, estas no linealidades.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+
+# Ajustar el modelo con splines no lineales en duration y amount
+modelo_hist <- gamlss(response ~ pb(duration) + pb(amount), data = german_credit, family = BI)
+
+# Resumen del modelo
+summary(modelo_hist)
+
+```
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Efecto no lineal de duration
+term.plot(modelo_hist, what = "mu", xvar = "duration")
+
+
+# Efecto no lineal de amount
+term.plot(modelo_hist, what = "mu", xvar = "amount")
+
+
+```
+
+# Analizando los datos observamos que tanto el intercepto como duration son variables altamente significativas, con p valores inferiores al 0.01. La variable amount, nos indica lo contrario, con un p valor muy elevado (0.982) nos indica que es muy poco significativo.
+
+# Dado que duration se introduce en el modelo suavizado a través de pb() (penalized B-splines), el efecto de duration en la probabilidad de que el crédito sea malo no es lineal, sino que sigue una forma más flexible.
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Modelo logit sin términos de suavización
+logit_model_simple <- glm(response ~ duration + amount, data = german_credit, family = binomial)
+summary(logit_model_simple)
+
+# AIC y BIC del modelo logit simple
+AIC(logit_model_simple)
+BIC(logit_model_simple)
+
+
+```
+# Por último comparamos los resultados de ambos modelos (con y sin suavizar) contrastando el AIC y BIC no podemos concluir un mejor ajuste, pues en el modelo ajustado el AIC es mas bajo (lo que generalmente se considera como mejor modelo), pero en el caso de BIC presenta un mejor ajuste en el modelo sin suavizar.
+
+# Como conclusión, el modelo sugiere que duration es un predictor significativo para la probabilidad de que el crédito sea malo, mientras que amount no muestra un efecto significativo.
+
+
+## 5. ¿Cuál es la probabilidad estimada media de que el crédito sea malo para mayores de 50 años?
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Verificar el tipo de la variable de respuesta
+str(german_credit)
+
+# Convertir la variable de respuesta a numérico si es un factor
+german_credit$response <- as.numeric(as.character(german_credit$response))
+
+
+sum(is.na(german_credit$age))
+
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# Definir la fórmula inicial del modelo
+formula <- as.formula(response ~ duration + chk_acct + credit_his + purpose + saving_acct +
+                   present_emp + installment_rate + sex + other_debtor + present_resid + property +
+                   age + other_install + housing + n_credits + job + n_people + telephone + foreign)
+
+# Ajustar el primer modelo de regresión lineal generalizada (GLM)
+modelo_gausiano <- glm(formula = formula, data = german_credit, family = gaussian)
+
+# Crear las nuevas variables EDAD_hasta_50 y EDAD_despues_50 en la tabla de datos
+german_credit$EDAD_hasta_50 <- ((50 - german_credit$age) < 0) * 0 + ((50 - german_credit$age) >= 0) * (50 - german_credit$age)
+german_credit$EDAD_despues_50 <- ((german_credit$age - 50) < 0) * 0 + ((german_credit$age - 50) >= 0) * (german_credit$age - 50)
+
+# Definir la nueva fórmula del modelo, incluyendo las variables transformadas
+formula_new <- as.formula('response ~ duration + chk_acct + credit_his + purpose + saving_acct +
+                   present_emp + installment_rate + sex + other_debtor + present_resid + property +
+                   other_install + housing + n_credits + job + n_people + telephone + foreign+ EDAD_hasta_50 + EDAD_despues_50')
+
+# Ajustar el nuevo modelo de regresión lineal generalizada (GLM)
+nuevo_modelo_final <- glm(formula = formula_new, data = german_credit, family = gaussian)
+
+# Mostrar el resumen del nuevo modelo utilizando pander para mejor formato
+summary(nuevo_modelo_final)
+
+
+```
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# Ajustar el modelo logit con la familia binomial
+formula_logit <- as.formula('response ~ duration + chk_acct + credit_his + purpose + saving_acct +
+                   present_emp + installment_rate + sex + other_debtor + present_resid + property +
+                   age + other_install + housing + n_credits + job + n_people + telephone + foreign')
+
+# Ajustar el modelo logit
+modelo_logit <- glm(formula = formula_logit, data = german_credit, family = binomial)
+
+# Filtrar los datos para mayores de 50 años
+german_credit_mayores_50 <- subset(german_credit, age > 50)
+
+# Calcular las probabilidades estimadas para mayores de 50 años
+probabilidades_mayores_50 <- predict(modelo_logit, newdata = german_credit_mayores_50, type = "response")
+
+# Calcular la probabilidad estimada media
+probabilidad_media_mayores_50 <- mean(probabilidades_mayores_50)
+probabilidad_media_mayores_50
+
+
+```
+# Dado que ambos valores p son superiores a 0.05, no hay evidencia estadísticamente significativa de que la edad (ya sea inferior o superior a 50 años) tenga un ajuste o un efecto significativo en el modelo. Esto significa que, en el contexto del modelo, la edad no parece influir de manera importante en la probabilidad de la respuesta para personas menores o mayores de 50 años.
+
+# la probabilidad estimada media de que el crédito sea malo para mayores de 50 años es de 24,8%
+
+## 6. ¿Crees que hay discriminación de género en este último modelo creado?
+
+# Si analizamos las variable que recogen la información de genero (SexA92,93 y 94) vemos que que únicamente podemos tomar como representativo analizando su p valor el caso de SexA93, con un p.value < 0.05. Esta categoría corresponde a 'male: single'. Analizando únicamente esta variable como significativa para el modelo, no podemos aterrizar una respuesta directa, pues hay otra categoría correspondiente al mismo sexo que no son significativas. Como consecuencia de esto, podemos indicar que no existe una discriminación directa por género.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# Resumen del modelo logit
+summary(modelo_logit)
+
+
+```
+
+
+## 7. Propón un modelo Ridge para modelizar el fenómeno crediticio. ¿Cuál es el lambda que minimiza el error? Compara este modelo con el logit que teníamos, anteriormente, con la curva ROC.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# Cargar el paquete glmnet si no está cargado
+if (!require(glmnet)) install.packages("glmnet", dependencies = TRUE)
+library(glmnet)
+
+# Crear la matriz de diseño sin la variable de respuesta (response)
+model <- model.matrix(response ~ . - 1, data = german_credit)
+
+# Definir la variable de respuesta
+response <- german_credit$response
+
+# Ajustar el modelo Ridge (alpha = 0 significa Ridge)
+Ridge <- glmnet(x = model, y = response, alpha = 0, family = "binomial")
+
+# Graficar el modelo Ridge mostrando los coeficientes en función de lambda
+plot(Ridge, label = TRUE, xvar = "lambda")
+
+
+```
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Realizar validación cruzada para el modelo Ridge con 10 particiones
+Ridge2 <- cv.glmnet(x = model, y = response, alpha = 0, family = "binomial", nfolds = 10)
+
+# Graficar el modelo Ridge mostrando el error en función de lambda
+plot(Ridge2)
+```
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Extraer los coeficientes del modelo Ridge usando el valor óptimo de lambda (lambda.min)
+coeficientes_ridge <- as.data.frame(as.matrix(predict(Ridge, type = "coefficients", s = Ridge2$lambda.min)))
+
+# Imprimir los coeficientes en la consola
+print(coeficientes_ridge)
+
+```
+
+# Conclusión modelo Ridge:
+# Los coeficientes de las variables menos relevantes tienden a acercarse a cero debido a la penalización, mientras que los coeficientes importantes se mantienen relativamente altos. Esto es evidente en variables como amount, que tiene un coeficiente cercano a cero, sugiriendo que su impacto es mínimo. Por otro lado, variables como chk_acctA11 y purposeA41 tienen coeficientes altos (positivos y negativos, respectivamente), lo cual indica una influencia importante en la probabilidad de que el crédito sea malo.
+
+**Coeficientes Positivos:** Indican un aumento en la probabilidad de que el crédito sea malo.
+**Coeficientes Negativos:** Indican una disminución en la probabilidad de que el crédito sea malo.
+**Coeficientes Cercanos a Cero:** Variables con poco o ningún efecto sobre la respuesta en este modelo regularizado.
+
+# Este análisis nos ayuda a identificar las variables clave que influyen en la probabilidad de un crédito malo y, eliminando el ruido de las variables menos relevantes mediante la regularización Ridge.

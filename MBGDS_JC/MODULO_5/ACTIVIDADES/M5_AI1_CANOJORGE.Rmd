@@ -1,0 +1,241 @@
+---
+title: "M5_AI1_CANOJORGE"
+author: "JORGE CANO"
+date: "2024-10-04"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## EJERCICIOS
+
+# 1. Propón la regresión para explicar el salario a través de los años de servicio y los años desde el doctorado. Justifica si era lo esperado o no y si difiere justificar la razón de dicho diferimiento. Obtén la suma de residuos al cuadrado, el coeficiente de determinación y el coeficiente de determinación corregido del modelo.
+
+#**COMETARIO**: Una vez propuesta la progresión, observo que el resultado no era el esperado, pues nos encontramos antes una relación negativa entre el salario y los años de servicios, lo cual sorprende, pues la lógica implicaría que a mayor años de servicio, tendrías un mayor salario. En cuánto a los años de doctorado si que implica relación positiva, lo cual parece lógico. Obtenemos tanto un R2 y R2 ajustado muy bajos, lo cual implica que el modelos no está correctamente representado, por lo que debemos considerar agregar más variables o realizar transformaciónes para mejorar la capacidad predictiva del modelo
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+options(width = 200)
+
+knitr::opts_chunk$set( warning = FALSE, message = FALSE)
+
+
+#install.packages("broom")
+#library(broom)
+
+#install.packages("stargazer")
+#library(stargazer)
+
+library(stargazer)
+
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Cargo los datos de salarios de la librería car
+
+library(car)
+
+bbdd_salarios <- Salaries
+
+```
+
+
+```{r echo=FALSE,warning=FALSE}
+#class(bbdd_salarios)
+
+formula<-as.formula('salary ~ yrs.service + yrs.since.phd')
+formula
+
+modelo1<-lm(formula = formula,data =bbdd_salarios)
+
+summary(modelo1)
+
+#tidy(modelo1)
+
+stargazer(modelo1, type = "text")
+
+
+#cat('Una vez propuesta la progresión, observo que el resultado no era el esperado, pues nos encontramos antes una relación negativa entre el salario y los años de servicios, lo cual sorprende, pues la lógica implicaría que a mayor años de servicio, tendrías un mayor salario. En cuánto a los años de doctorado si que implica relación positiva, lo cual parece lógico. Obtenemos tanto un R2 y R2 ajustado muy bajos, lo cual implica que el modelos no está correctamente representado, por lo que debemos considerar agregar más variables o realizar transformaciónes para mejorar la capacidad predictiva del modelo')
+
+RSS <- sum(resid(modelo1)^2)
+R2 <- summary(modelo1)$r.squared
+R2_adjusted <- summary(modelo1)$adj.r.squared
+
+#print(RSS)
+#print(R2)
+#print(R2_adjusted)
+#AIC(modelo1)
+#plot(modelo1$fitted.values, resid(modelo1))
+
+
+```
+
+
+
+# 2. Incluye el género en el modelo. Valora la nueva suma de residuos al cuadrado.
+
+#**COMETARIO**:Si valoramos la RSS del nuevo modelo, vemos que no mejora respecto la propuesta anterior. Para determinar esto, hemos comparado el test F dónde para un mismo nivel de significación <0.01, el primero modelo presenta una F más alta, explicando así una mayor proporción en la variabilidad en los datos
+
+```{r echo=FALSE,warning=FALSE}
+
+formula2<-as.formula('salary ~ yrs.service + yrs.since.phd + sex')
+formula2
+
+modelo2<-lm(formula = formula2,data =bbdd_salarios)
+
+summary(modelo2)
+
+#tidy(modelo2)
+
+stargazer(modelo2, type = "text")
+
+print('Suma de errores al cuadrado')
+RSS2 <- sum(resid(modelo2)^2)
+AIC(modelo2)
+plot(modelo2$fitted.values, resid(modelo2))
+
+#print('Si valoramos la RSS del nuevo modelo, vemos que no mejora respecto la propuesta anterior. Para determinar esto, hemos comparado el test F dónde para un mismo nivel de significación <0.01, el primero modelo presenta una F más alta, explicando así una mayor proporción en la variabilidad en los datos')
+
+
+```
+
+
+# 3. Justifica, a través del coeficiente de determinación corregido, si el género es una variable a tener en cuenta para mejorar el modelo de predicción del salario.
+
+#**COMETARIO**: Si incluímos en el modelo la variable género, mejoramos muy residualmente la predicción del salario, pues la mejor es muy residual, pasando de un r2_ajustado en el modelo 1 de 0.184 a 0.189 en el modelo 2. Cómo consecuencia estamos añadiendo al modelo una variable adicional que no es determinaste y puede generar problemas de consistencia y explicabilidad
+```{r echo=FALSE,warning=FALSE}
+R2_adjusted_1 <- summary(modelo1)$adj.r.squared
+R2_adjusted_2 <- summary(modelo2)$adj.r.squared
+
+print('R2_adjusted_1')
+print(R2_adjusted_1)
+print('R2_adjusted_2')
+print(R2_adjusted_2)
+
+#print('Si incluímos en el modelo la variable género, mejoramos muy residualmente la predicción del salario, pues la mejor es muy residual, pasando de un r2_ajustado en el modelo 1 de 0.184 a 0.189 en el modelo 2. Cómo consecuencia estamos añadiendo al modelo una variable adicional que no es determinaste y puede generar problemas de consistencia y explicabilidad')
+
+```
+
+
+# 4. Indica cómo incrementa el salario ante una variación en los años de servicio. 
+
+#**COMETARIO**:Cómo hemos podido contrastar, la variable años de servicio, tiene una relación negativa, lo que supone que al incrementar los años de servicio, el salario decrece
+
+```{r echo=FALSE,warning=FALSE}
+
+#print('Cómo hemos podido contrastar, la variable años de servicio, tiene una relación negativa, lo que supone que al incrementar los años de servicio, el salario decrece')
+
+```
+
+
+# 5. Indica cómo afecta a las betas del modelo si dividimos el salario por mil para expresarlo en miles. 
+
+#**COMETARIO**: Las betas se ven divididas por el mismo número, en este caso 1000
+
+```{r echo=FALSE,warning=FALSE}
+#Nueva BBDD con los salarios divididos /1000
+bbdd_salarios_ajus<- bbdd_salarios
+
+bbdd_salarios_ajus$salary_thousands <- bbdd_salarios_ajus$salary / 1000
+
+head(bbdd_salarios_ajus)
+
+#Incluimos la nueva variable para lanzar el modelo
+formula3<-as.formula('salary_thousands ~ yrs.service + yrs.since.phd + sex')
+
+
+modelo3<-lm(formula = formula3,data =bbdd_salarios_ajus)
+
+summary(modelo3)
+
+#tidy(modelo3)
+
+stargazer(modelo3, type = "text")
+
+#print('Las betas se ven divididas por el mismo número, en este caso 1000')
+
+```
+
+
+# 6.Con el modelo anterior, teniendo en cuenta años de servicio y años desde el doctorado, realiza el mismo modelo, pero con el logaritmo neperiano del salario. Indica si se mantienen los signos de las betas obtenidas. 
+
+#**COMETARIO**: Aplicando el logaritmo neperiano sobre la variable respuesta, se mantiene los signos, pero tiene menor impacto en el modelo los años de servicio
+
+```{r echo=FALSE,warning=FALSE}
+
+# Aplicar el logaritmo natural (neperiano) a salary_thousands en la fórmula
+formula4 <- as.formula('log(salary_thousands) ~ yrs.service + yrs.since.phd')
+
+# Ajustar el modelo de regresión lineal con la fórmula modificada
+modelo4 <- lm(formula = formula4, data = bbdd_salarios_ajus)
+
+# Resumen del modelo ajustado
+summary(modelo4)
+#tidy(modelo4)
+stargazer(modelo4, type = "text")
+
+#print('Aplicando el logaritmo neperiano sobre la variable respuesta, se mantiene los signos, pero tiene menor impacto en el modelo los años de servicio')
+
+```
+# 7. Indica cómo incrementa el salario ante una variación, en los años de servicio en este nuevo modelo. 
+
+#**COMETARIO**: Los años de servicio continua teniendo una beta negativa, lo que supone que a mayor años de servicio, menor salario. Por tanto no podemos observar coherencia en esta variable. Para tratar de añalizar la variabilidad de los años de servicio, representaré un gráfico donde se relacione con el salario
+```{r echo=FALSE,warning=FALSE}
+
+#print('Los años de servicio continua teniendo una beta negativa, lo que supone que a mayor años de servicio, menor salario. Por tanto no podemos observar coherencia en esta variable. Para tratar de añalizar la variabilidad de los años de servicio, representaré un gráfico donde se relacione con el salario')
+
+scatter.smooth(bbdd_salarios_ajus$salary_thousands, bbdd_salarios_ajus$yrs.service, main="salary_thousands vs. yrs.service",
+   xlab="salary_thousands", ylab="yrs.service", col="blue")
+
+```
+
+
+# 8. Utilizando un modelo de regresión lineal (lm), realiza una modelización correcta del salario (utilizando las variables que desees de la base de datos) y presenta los resultados argumentando, desde tu conocimiento, las razones por las que eliges dicho modelo.
+
+#**COMETARIO**: En primer lugar, voy a representar gráficamente la relación entre las variables, para determinar cuales pueden aportar más al modelo de forma visual
+
+#**JUSTIFICACIÓN**: De cara a seleccionar mi modelo, en base el análisis visual de los gráficos de dispersión, generaría mi modelo con las variables años desde obtención del doctorado, el rank y la disciplina, siendo el rank la variable que mejor explica el modelo. En cuando la variable salario, aplicaré el logaritmo neperiano, pues en el caso propuesto incremento el r2, mejorando la explicabildiad de las variables.
+
+```{r echo=FALSE,warning=FALSE}
+
+#print('En primer lugar, voy a representar gráficamente la relación entre las variables, para determinar cuales pueden aportar más al modelo de forma visual')
+
+scatter.smooth(bbdd_salarios$salary, bbdd_salarios$yrs.since.phd, main="Salary vs. yrs.since.phd",
+   xlab="Salary", ylab="Years of Experience", col="blue")
+
+scatter.smooth(bbdd_salarios$salary, bbdd_salarios$yrs.service, main="Salary vs. yrs.service",
+   xlab="Salary", ylab="yrs.service", col="blue")
+
+scatter.smooth(bbdd_salarios$salary, bbdd_salarios$rank, main="Salary vs. rank",
+   xlab="Salary", ylab="rank", col="blue")
+
+
+```
+
+
+```{r echo=FALSE,warning=FALSE}
+
+formula5 <- as.formula('log(salary_thousands) ~ yrs.since.phd + rank + discipline')
+
+# Ajustar el modelo de regresión lineal con la fórmula modificada
+modelo5 <- lm(formula = formula5, data = bbdd_salarios_ajus)
+
+# Resumen del modelo ajustado
+summary(modelo5)
+#tidy(modelo5)
+stargazer(modelo5, type = "text")
+
+#print('De cara a seleccionar mi modelo, en base el análisis visual de los gráficos de dispersión, generaría mi modelo con las variables años desde obtención del doctorado, el rank y la disciplina, siendo el rank la variable que mejor explica el modelo. En cuando la variable salario, aplicaré el logaritmo neperiano, pues en el caso propuesto incremento el r2, mejorando la explicabildiad de las variables. ')
+
+```
+
+
+
