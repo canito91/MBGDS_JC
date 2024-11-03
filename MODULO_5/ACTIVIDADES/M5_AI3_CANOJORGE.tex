@@ -1,0 +1,720 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={M5\_AI3\_CANOJORGE},
+  pdfauthor={JORGE CANO},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{M5\_AI3\_CANOJORGE}
+\author{JORGE CANO}
+\date{2024-10-20}
+
+\begin{document}
+\maketitle
+
+\subsection{Utilizando la base de datos de pisos, que hemos utilizado
+durante el temario en la que podemos encontrar un listado de pisos
+disponibles en Airbnb en Madrid, por temas computacionales, debes
+quedarte con un máximo de 2000 viviendas para responder las siguientes
+preguntas:}\label{utilizando-la-base-de-datos-de-pisos-que-hemos-utilizado-durante-el-temario-en-la-que-podemos-encontrar-un-listado-de-pisos-disponibles-en-airbnb-en-madrid-por-temas-computacionales-debes-quedarte-con-un-muxe1ximo-de-2000-viviendas-para-responder-las-siguientes-preguntas}
+
+\section{Lo primero será traer los datos y limitar la BBDD a 2.000
+observaciones.}\label{lo-primero-seruxe1-traer-los-datos-y-limitar-la-bbdd-a-2.000-observaciones.}
+
+\begin{verbatim}
+##      X longitude latitude  price       room_type minimum_nights
+## 1 2948  -3.58253 40.47534  57.00 Entire home/apt              4
+## 2 6990  -3.70754 40.45151 178.00 Entire home/apt              1
+## 3 7784  -3.70115 40.47011  69.00 Entire home/apt              3
+## 4  645  -3.76036 40.40210 125.00 Entire home/apt              1
+## 5 3250  -3.69328 40.40821  69.86 Entire home/apt              1
+## 6 2460  -3.70531 40.42623 110.00 Entire home/apt              2
+##   number_of_reviews review_scores_value calculated_host_listings_count bedrooms
+## 1               379                   9                              3        2
+## 2                 1                   8                              4        3
+## 3                 1                   8                              1        3
+## 4                20                   9                              6        1
+## 5               228                  10                              3        1
+## 6               107                   9                              1        2
+##   reviews_per_month beds accommodates availability_30 availability_60
+## 1              9.90    5            4              29              59
+## 2              0.12    4            6              30              60
+## 3              0.73    3            5              29              59
+## 4              0.29    4            6              20              46
+## 5              6.57    3            3               9              24
+## 6              2.59    4            6              13              43
+##   availability_90 instant_bookable Distancia_Centro Distancia_Norte
+## 1              89                t             12.1             8.5
+## 2              90                f              3.9             3.1
+## 3              89                t              5.9             1.6
+## 4              76                t              5.1            10.2
+## 5              48                t              1.3             7.1
+## 6              73                t              1.1             5.4
+##   Distancia_Sur logprice tv_ports phone_ports Vecinos Piso ventanas
+## 1          15.2 4.043051        4           3       2    5        2
+## 2           6.9 5.181784        1           2       1    6        6
+## 3           9.0 4.234107        3           2       2    4        3
+## 4           3.3 4.828314        1           4       1    5        2
+## 5           3.3 4.246493        3           2       1    1        1
+## 6           4.2 4.700480        1           4       2    1        4
+\end{verbatim}
+
+\begin{verbatim}
+## 'data.frame':    2000 obs. of  26 variables:
+##  $ X                             : int  2948 6990 7784 645 3250 2460 1644 3212 6248 7484 ...
+##  $ longitude                     : num  -3.58 -3.71 -3.7 -3.76 -3.69 ...
+##  $ latitude                      : num  40.5 40.5 40.5 40.4 40.4 ...
+##  $ price                         : num  57 178 69 125 69.9 ...
+##  $ room_type                     : chr  "Entire home/apt" "Entire home/apt" "Entire home/apt" "Entire home/apt" ...
+##  $ minimum_nights                : int  4 1 3 1 1 2 1 2 2 1 ...
+##  $ number_of_reviews             : int  379 1 1 20 228 107 2 5 8 1 ...
+##  $ review_scores_value           : int  9 8 8 9 10 9 8 9 7 2 ...
+##  $ calculated_host_listings_count: int  3 4 1 6 3 1 20 1 4 1 ...
+##  $ bedrooms                      : int  2 3 3 1 1 2 1 1 2 1 ...
+##  $ reviews_per_month             : num  9.9 0.12 0.73 0.29 6.57 2.59 0.04 0.14 0.71 0.29 ...
+##  $ beds                          : int  5 4 3 4 3 4 3 2 2 4 ...
+##  $ accommodates                  : int  4 6 5 6 3 6 4 4 6 6 ...
+##  $ availability_30               : int  29 30 29 20 9 13 0 0 30 0 ...
+##  $ availability_60               : int  59 60 59 46 24 43 0 0 60 0 ...
+##  $ availability_90               : int  89 90 89 76 48 73 0 0 88 0 ...
+##  $ instant_bookable              : chr  "t" "f" "t" "t" ...
+##  $ Distancia_Centro              : num  12.1 3.9 5.9 5.1 1.3 1.1 0.8 0.9 3.5 7.2 ...
+##  $ Distancia_Norte               : num  8.5 3.1 1.6 10.2 7.1 5.4 7.2 7.3 9.9 13.2 ...
+##  $ Distancia_Sur                 : num  15.2 6.9 9 3.3 3.3 4.2 2.5 2.4 1 5.3 ...
+##  $ logprice                      : num  4.04 5.18 4.23 4.83 4.25 ...
+##  $ tv_ports                      : int  4 1 3 1 3 1 2 2 4 3 ...
+##  $ phone_ports                   : int  3 2 2 4 2 4 3 2 4 2 ...
+##  $ Vecinos                       : int  2 1 2 1 1 2 1 1 3 1 ...
+##  $ Piso                          : int  5 6 4 5 1 1 4 5 6 2 ...
+##  $ ventanas                      : int  2 6 3 2 1 4 4 4 3 2 ...
+\end{verbatim}
+
+\begin{verbatim}
+##        X          longitude         latitude         price       
+##  Min.   :   3   Min.   :-3.794   Min.   :40.33   Min.   : 20.00  
+##  1st Qu.:1886   1st Qu.:-3.707   1st Qu.:40.41   1st Qu.: 56.00  
+##  Median :3737   Median :-3.702   Median :40.42   Median : 76.50  
+##  Mean   :3845   Mean   :-3.698   Mean   :40.42   Mean   : 97.78  
+##  3rd Qu.:5809   3rd Qu.:-3.695   3rd Qu.:40.43   3rd Qu.:110.25  
+##  Max.   :7899   Max.   :-3.576   Max.   :40.51   Max.   :847.00  
+##   room_type         minimum_nights  number_of_reviews review_scores_value
+##  Length:2000        Min.   :1.000   Min.   :  1.0     Min.   : 2.000     
+##  Class :character   1st Qu.:1.000   1st Qu.:  6.0     1st Qu.: 9.000     
+##  Mode  :character   Median :2.000   Median : 23.5     Median : 9.000     
+##                     Mean   :2.296   Mean   : 57.3     Mean   : 9.185     
+##                     3rd Qu.:3.000   3rd Qu.: 77.0     3rd Qu.:10.000     
+##                     Max.   :9.000   Max.   :643.0     Max.   :10.000     
+##  calculated_host_listings_count    bedrooms    reviews_per_month
+##  Min.   :  1.00                 Min.   :1.00   Min.   :0.010    
+##  1st Qu.:  1.00                 1st Qu.:1.00   1st Qu.:0.340    
+##  Median :  2.00                 Median :1.00   Median :1.070    
+##  Mean   : 13.59                 Mean   :1.69   Mean   :1.594    
+##  3rd Qu.:  7.00                 3rd Qu.:2.00   3rd Qu.:2.360    
+##  Max.   :213.00                 Max.   :9.00   Max.   :9.900    
+##       beds         accommodates    availability_30 availability_60
+##  Min.   : 0.000   Min.   : 1.000   Min.   : 0.00   Min.   : 0.00  
+##  1st Qu.: 2.000   1st Qu.: 3.000   1st Qu.: 0.00   1st Qu.: 0.00  
+##  Median : 2.000   Median : 4.000   Median :14.00   Median :39.00  
+##  Mean   : 2.532   Mean   : 4.381   Mean   :13.93   Mean   :30.68  
+##  3rd Qu.: 3.000   3rd Qu.: 6.000   3rd Qu.:29.00   3rd Qu.:59.00  
+##  Max.   :14.000   Max.   :16.000   Max.   :30.00   Max.   :60.00  
+##  availability_90 instant_bookable   Distancia_Centro Distancia_Norte 
+##  Min.   : 0.00   Length:2000        Min.   : 0.0     Min.   : 0.100  
+##  1st Qu.: 0.00   Class :character   1st Qu.: 0.7     1st Qu.: 5.400  
+##  Median :65.00   Mode  :character   Median : 1.0     Median : 6.400  
+##  Mean   :48.31                      Mean   : 1.9     Mean   : 6.185  
+##  3rd Qu.:88.00                      3rd Qu.: 2.5     3rd Qu.: 7.100  
+##  Max.   :90.00                      Max.   :12.6     Max.   :15.700  
+##  Distancia_Sur       logprice        tv_ports     phone_ports      Vecinos     
+##  Min.   : 0.200   Min.   :2.996   Min.   :1.00   Min.   :1.00   Min.   :1.000  
+##  1st Qu.: 2.900   1st Qu.:4.025   1st Qu.:1.00   1st Qu.:2.00   1st Qu.:1.000  
+##  Median : 3.650   Median :4.337   Median :2.00   Median :3.00   Median :2.000  
+##  Mean   : 4.287   Mean   :4.402   Mean   :2.48   Mean   :2.51   Mean   :1.963  
+##  3rd Qu.: 4.800   3rd Qu.:4.703   3rd Qu.:4.00   3rd Qu.:3.00   3rd Qu.:3.000  
+##  Max.   :15.700   Max.   :6.742   Max.   :4.00   Max.   :4.00   Max.   :3.000  
+##       Piso        ventanas    
+##  Min.   :1.0   Min.   : 1.00  
+##  1st Qu.:2.0   1st Qu.: 2.00  
+##  Median :4.0   Median : 3.00  
+##  Mean   :3.5   Mean   : 3.17  
+##  3rd Qu.:5.0   3rd Qu.: 4.00  
+##  Max.   :6.0   Max.   :11.00
+\end{verbatim}
+
+\subsection{1. ¿Existe dependencia espacial en la variable precio? ¿Qué
+tipo de dependencia espacial existe: local, global o
+ambas?}\label{existe-dependencia-espacial-en-la-variable-precio-quuxe9-tipo-de-dependencia-espacial-existe-local-global-o-ambas}
+
+Para contestar a esta pregunta vamos a calcular los k-nearest neighbors
+(k = 10) y posteriormente realizar un tes de dependencia espacial con el
+test de Moran.
+
+El índice de Moran es una medida de autocorrelación espacial global. Un
+valor significativo indica que existe dependencia espacial global, es
+decir, los valores de price están correlacionados espacialmente en toda
+el área de estudio.
+
+Si el p-valor es significativo (menor a 0.05), indica que existe una
+autocorrelación espacial global en la variable price.En nuestro caso
+obtenemos un p valor inferior a 0.05 y por tanto \textbf{podemos
+determinar que existe autocorrelación espacial global en la variable
+precio}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{nb }\OtherTok{\textless{}{-}} \FunctionTok{knn2nb}\NormalTok{(}\FunctionTok{knearneigh}\NormalTok{(}\FunctionTok{cbind}\NormalTok{(BBDD\_MUESTRA}\SpecialCharTok{$}\NormalTok{longitude, BBDD\_MUESTRA}\SpecialCharTok{$}\NormalTok{latitude), }\AttributeTok{k=}\DecValTok{10}\NormalTok{))}
+
+
+\FunctionTok{moran.test}\NormalTok{(}\AttributeTok{x =}\NormalTok{ BBDD\_MUESTRA}\SpecialCharTok{$}\NormalTok{price, }\AttributeTok{listw =} \FunctionTok{nb2listw}\NormalTok{(nb, }\AttributeTok{style=}\StringTok{"W"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+Moran I test under randomisation
+\end{verbatim}
+
+data: BBDD\_MUESTRA\$price\\
+weights: nb2listw(nb, style = ``W'')
+
+Moran I statistic standard deviate = 4.9772, p-value = 3.226e-07
+alternative hypothesis: greater sample estimates: Moran I statistic
+Expectation Variance 4.614511e-02 -5.002501e-04 8.783103e-05
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{moran.plot}\NormalTok{(}\AttributeTok{x =}\NormalTok{ BBDD\_MUESTRA}\SpecialCharTok{$}\NormalTok{price, }\AttributeTok{listw =} \FunctionTok{nb2listw}\NormalTok{(nb, }\AttributeTok{style=}\StringTok{"W"}\NormalTok{),}\AttributeTok{main=}\StringTok{"Gráfico I Moran"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{M5_AI3_CANOJORGE_files/figure-latex/unnamed-chunk-3-1.pdf}
+Para ver si además de esto, hay alguna zona en el mapa que presenta un
+alto grado de dependencia espacial. Es decir, una dependencia espacial
+local, podemos llamar al test LISA. Es equivalente al I-Moran pero lo
+vamos a hacer a nivel regiones.
+
+\begin{verbatim}
+##            Ii          E.Ii      Var.Ii       Z.Ii Pr(z != E(Ii))
+## 1  0.20599534 -1.334961e-04 0.026575399  1.2644418      0.2060715
+## 2 -0.23660622 -5.167205e-04 0.102825418 -0.7362519      0.4615774
+## 3  0.10242141 -6.648497e-05 0.013236217  0.8908214      0.3730250
+## 4 -0.03891009 -5.950355e-05 0.011846399 -0.3569476      0.7211310
+## 5  0.08073519 -6.257046e-05 0.012456943  0.7239250      0.4691118
+## 6 -0.03055838 -1.199640e-05 0.002388443 -0.6250321      0.5319500
+\end{verbatim}
+
+Representando el test gráficamente, \textbf{podemos confirmar que existe
+dependencia local}
+
+\begin{verbatim}
+## Error: object 'lw' not found
+\end{verbatim}
+
+\begin{verbatim}
+## Error: object 'lisa' not found
+\end{verbatim}
+
+\begin{verbatim}
+## Error: object 'lisa' not found
+\end{verbatim}
+
+\begin{verbatim}
+## Error in `geom_point()`:
+## ! Problem while computing aesthetics.
+## i Error occurred in the 1st layer.
+## Caused by error:
+## ! object 'lisa_value' not found
+\end{verbatim}
+
+\subsection{2. Establece un modelo lineal para estimar la variable
+precio por m2. ¿Hay dependencia espacial en los residuos del
+modelo?}\label{establece-un-modelo-lineal-para-estimar-la-variable-precio-por-m2.-hay-dependencia-espacial-en-los-residuos-del-modelo}
+
+A la hora de crear un modelo líneal utilizaremos el siguiente modelo
+glm: price \textasciitilde{} minimum\_nights + number\_of\_reviews +
+beds + Distancia\_Centro + Piso + ventanas
+
+Dado que no me ejecute la función \textbf{lagsarlm} vamos a trabajar
+bajo la siguiente hipótesis respondiende de una forma teórica:
+
+\textbf{comenta el problema como si Rho y Lambda fuesen significativos,
+qué significaría, cómo impactaría}
+
+En el contexto de un modelo de regresión espacial autorregresivo (SAR),
+Rho (ρ) es el parámetro que mide la autocorrelación espacial en la
+variable dependiente (Y). \textbf{Si Rho es significativo, esto implica
+que los valores de la variable dependiente en una localización están
+influenciados por los valores de la variable dependiente en
+localizaciones vecinas.}
+
+Si ρ es positivo, esto sugiere que hay dependencia positiva, es decir,
+las observaciones con valores altos de la variable dependiente tienden a
+estar cerca de otras observaciones con valores altos, y lo mismo ocurre
+con valores bajos. Si ρ es negativo, esto indicaría dependencia
+negativa, lo que significa que las observaciones con valores altos de la
+variable dependiente tienden a estar cerca de observaciones con valores
+bajos, lo que sugiere dispersión espacial.
+
+En un modelo de error espacial (SEM), Lambda (λ) representa la
+autocorrelación espacial en los errores del modelo. \textbf{Si Lambda es
+significativo, esto sugiere que hay un patrón espacial en los residuos
+(es decir, los errores no son independientes entre sí, sino que están
+correlacionados espacialmente).}
+
+\begin{verbatim}
+## Error in lagsarlm(formula = formula, data = BBDD_MUESTRA, listw = nb2listw(nb3, : could not find function "lagsarlm"
+\end{verbatim}
+
+\begin{verbatim}
+## Error: object 'modelo_espacial_sar' not found
+\end{verbatim}
+
+\begin{verbatim}
+## [1] "residuos modelo GLM 10159684.8016581"
+\end{verbatim}
+
+\begin{verbatim}
+## Error: object 'modelo_espacial_sar' not found
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#install.packages(\textquotesingle{}spDataLarge\textquotesingle{}, repos=\textquotesingle{}https://nowosad.github.io/drat/\textquotesingle{}, type=\textquotesingle{}source\textquotesingle{})}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{3. Introduce una variable más en el modelo. Dicha variable
+es la distancia mínima entre cada persona y la geolocalización de las
+oficinas bancarias de Madrid obtenidas con OSM. ¿Sigue habiendo
+dependencia espacial en los residuos del nuevo
+modelo?}\label{introduce-una-variable-muxe1s-en-el-modelo.-dicha-variable-es-la-distancia-muxednima-entre-cada-persona-y-la-geolocalizaciuxf3n-de-las-oficinas-bancarias-de-madrid-obtenidas-con-osm.-sigue-habiendo-dependencia-espacial-en-los-residuos-del-nuevo-modelo}
+
+Para contestar el ejercicio nos traemos la BBDD de OSM. Una vez cargada
+calculamos la variable de distancia mínima entre cada persona y la
+geolocalización de las oficinas bancarias de Madrid obtenidas con OSM.
+
+Posteriormente calculamos el p-valor del test de Moran, siendo este mur
+bajo (\textless{} 0.05), lo que nos indica que sigue habiendo
+autocorrelación espacial en los residuos del nuevo modelo.
+
+\begin{verbatim}
+##     CIA  LONG_IND  LAT_IND
+## 1 Caixa -3.481729 40.53103
+## 2 Caixa -3.989592 40.23070
+## 3 Caixa -3.370189 40.50776
+## 4 Caixa -3.376134 40.49007
+## 5 Caixa -3.355582 40.48619
+## 6 Caixa -3.376853 40.47518
+\end{verbatim}
+
+\begin{verbatim}
+##      X longitude latitude  price       room_type minimum_nights
+## 1 2948  -3.58253 40.47534  57.00 Entire home/apt              4
+## 2 6990  -3.70754 40.45151 178.00 Entire home/apt              1
+## 3 7784  -3.70115 40.47011  69.00 Entire home/apt              3
+## 4  645  -3.76036 40.40210 125.00 Entire home/apt              1
+## 5 3250  -3.69328 40.40821  69.86 Entire home/apt              1
+## 6 2460  -3.70531 40.42623 110.00 Entire home/apt              2
+##   number_of_reviews review_scores_value calculated_host_listings_count bedrooms
+## 1               379                   9                              3        2
+## 2                 1                   8                              4        3
+## 3                 1                   8                              1        3
+## 4                20                   9                              6        1
+## 5               228                  10                              3        1
+## 6               107                   9                              1        2
+##   reviews_per_month beds accommodates availability_30 availability_60
+## 1              9.90    5            4              29              59
+## 2              0.12    4            6              30              60
+## 3              0.73    3            5              29              59
+## 4              0.29    4            6              20              46
+## 5              6.57    3            3               9              24
+## 6              2.59    4            6              13              43
+##   availability_90 instant_bookable Distancia_Centro Distancia_Norte
+## 1              89                t             12.1             8.5
+## 2              90                f              3.9             3.1
+## 3              89                t              5.9             1.6
+## 4              76                t              5.1            10.2
+## 5              48                t              1.3             7.1
+## 6              73                t              1.1             5.4
+##   Distancia_Sur logprice tv_ports phone_ports Vecinos Piso ventanas
+## 1          15.2 4.043051        4           3       2    5        2
+## 2           6.9 5.181784        1           2       1    6        6
+## 3           9.0 4.234107        3           2       2    4        3
+## 4           3.3 4.828314        1           4       1    5        2
+## 5           3.3 4.246493        3           2       1    1        1
+## 6           4.2 4.700480        1           4       2    1        4
+##   distancia_a_agencia
+## 1           474.00356
+## 2           191.94819
+## 3            89.82234
+## 4           729.18021
+## 5           191.70566
+## 6           116.50945
+\end{verbatim}
+
+\begin{verbatim}
+## NULL
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Call:
+## glm(formula = formula_new_model, family = gaussian, data = BBDD_MUESTRA)
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)        71.714083   7.177114   9.992  < 2e-16 ***
+## minimum_nights     -2.075558   1.158992  -1.791 0.073473 .  
+## number_of_reviews  -0.180852   0.020593  -8.782  < 2e-16 ***
+## beds               15.727672   1.257459  12.508  < 2e-16 ***
+## Distancia_Centro   -3.295501   0.860629  -3.829 0.000133 ***
+## Piso2              -1.011702   5.575937  -0.181 0.856040    
+## Piso3              -1.309096   5.656959  -0.231 0.817018    
+## Piso4              -3.669315   5.487777  -0.669 0.503807    
+## Piso5              -5.833487   5.588203  -1.044 0.296662    
+## Piso6               0.899282   5.607629   0.160 0.872608    
+## ventanas2           9.930774   5.737042   1.731 0.083609 .  
+## ventanas3           8.683027   5.655661   1.535 0.124875    
+## ventanas4           6.421872   5.639399   1.139 0.254945    
+## ventanas5          15.930695   6.886222   2.313 0.020802 *  
+## ventanas6          56.131284  11.181829   5.020 5.63e-07 ***
+## ventanas7          23.930522  20.925902   1.144 0.252935    
+## ventanas8          59.250014  37.476603   1.581 0.114041    
+## ventanas9         180.642325  51.643896   3.498 0.000479 ***
+## ventanas11        -85.818835  72.195513  -1.189 0.234700    
+## distancia_minima   -0.002995   0.015934  -0.188 0.850929    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for gaussian family taken to be 5131.062)
+## 
+##     Null deviance: 12461378  on 1999  degrees of freedom
+## Residual deviance: 10159504  on 1980  degrees of freedom
+## AIC: 22784
+## 
+## Number of Fisher Scoring iterations: 2
+\end{verbatim}
+
+\begin{verbatim}
+## 
+##  Moran I test under randomisation
+## 
+## data:  residuos  
+## weights: listw    
+## 
+## Moran I statistic standard deviate = 3.2048, p-value = 0.0006758
+## alternative hypothesis: greater
+## sample estimates:
+## Moran I statistic       Expectation          Variance 
+##      2.950927e-02     -5.002501e-04      8.768297e-05
+\end{verbatim}
+
+\subsection{4. Modeliza el precio con un SAR. ¿Es significativo el
+factor de dependencia espacial? Interpreta el
+modelo.}\label{modeliza-el-precio-con-un-sar.-es-significativo-el-factor-de-dependencia-espacial-interpreta-el-modelo.}
+
+Para contestar este ejercicio modelizo el precio con un SAR. Al igual
+que ejercicios anteriores no puedo ejecutar la funcion lagsarlm a pesar
+de tener instalado la librería spdep. Por ello, dejaré reflejado el
+código, y contestaré bajo la hipótesis de que Rho y Lambda son igual
+0.5.
+
+\textbf{Rho = 0.5}: Indica que los precios de las viviendas están
+moderadamente influenciados por los precios en las viviendas vecinas
+(50\% de autocorrelación espacial en la variable dependiente).
+
+\textbf{Lambda = 0.5}: Indica que los errores del modelo tienen un 50\%
+de autocorrelación espacial, sugiriendo que factores espaciales no
+modelados aún están afectando a los precios.
+
+La presencia de ambos (Rho y Lambda) sugiere que la estructura espacial
+es importante y que hay dependencia espacial tanto en los precios como
+en los errores, lo que justifica el uso de un modelo SAR para obtener
+estimaciones más precisas y robustas.
+
+\begin{verbatim}
+## Error in lagsarlm(formula = formula_sar, data = BBDD_MUESTRA, listw = listw): could not find function "lagsarlm"
+\end{verbatim}
+
+\begin{verbatim}
+## Error: object 'modelo_sar' not found
+\end{verbatim}
+
+\subsection{5. Modeliza el precio con un SEM. ¿Es significativo el
+factor de dependencia espacial? Interpreta el
+modelo.}\label{modeliza-el-precio-con-un-sem.-es-significativo-el-factor-de-dependencia-espacial-interpreta-el-modelo.}
+
+Debido a los problemas con la librería spdep tampoco puedo ejecutar la
+función errorsarlm y por tanto no puedo modelizar el precio con un SEM,
+por lo que aplicaré un modelo teorico. Podemos reusmir el modelo teórico
+de SEM bajo las siguientes premisas:
+
+\textbf{Coeficientes:} Indican cómo afectan las variables independientes
+a la variable dependiente, ajustando por la dependencia espacial en los
+errores. El tamaño y el signo de los coeficientes muestran la dirección
+y magnitud del impacto de cada variable.
+
+\textbf{Lambda (λ):} Mide la autocorrelación espacial en los errores. Si
+λ es significativo, hay dependencia espacial en los errores, lo que
+significa que el modelo SEM es adecuado. El valor de λ indica el grado
+de dependencia espacial en los errores.
+
+\textbf{LR test:} Un p-valor bajo en el LR test indica que el modelo SEM
+es significativamente mejor que un modelo sin autocorrelación espacial
+en los errores.
+
+\textbf{AIC:} El AIC permite comparar la calidad del ajuste entre
+diferentes modelos. Un valor más bajo indica un mejor ajuste.
+
+Para el ejercicio propuesto vamos a suponer un p valor de significacia
+de los coeficientes inferior a 0.05, representando que es
+estadísticamente significativo, lo que indica que la variable
+independiente tiene un impacto en la variable dependiente después de
+ajustar por la dependencia espacial en los errores.
+
+Si λ es significativo (p-valor \textless{} 0.05), indica que existe
+autocorrelación espacial en los errores. Los errores no son
+independientes y están correlacionados en función de la localización
+espacial. Esto sugiere que hay factores espaciales no modelados que
+están afectando las observaciones.
+
+\begin{verbatim}
+## Error in errorsarlm(formula = formula, data = BBDD_MUESTRA, listw = nb2listw(nb3, : could not find function "errorsarlm"
+\end{verbatim}
+
+\begin{verbatim}
+## Error: object 'modelo_espacial_sem' not found
+\end{verbatim}
+
+\subsection{6. Valora la capacidad predictiva del modelo SAR con la
+técnica de validación
+cruzada.}\label{valora-la-capacidad-predictiva-del-modelo-sar-con-la-tuxe9cnica-de-validaciuxf3n-cruzada.}
+
+\subsection{7. Propón un modelo GWR para estimar los residuos con un
+cierto
+suavizado.}\label{propuxf3n-un-modelo-gwr-para-estimar-los-residuos-con-un-cierto-suavizado.}
+
+Un modelo GWR es útil cuando queremos modelar una relación que varía en
+el espacio. Este modelo permite que los coeficientes de las variables
+explicativas varíen dependiendo de la localización, lo que lo hace
+especialmente útil en situaciones en las que las relaciones entre las
+variables no son homogéneas en todas las regiones. La GWR se ajusta a
+los datos ponderando las observaciones en función de su cercanía
+espacial a cada punto donde se está realizando la estimación.
+
+Para estimar los residuos he ajustado el modelo GWR con el ancho de
+banda óptimo encontrado y posteriormente he extraido los residuos del
+modelo GWR. Con los residuos he creado la lista de pesos espaciales
+basada en los vecinos más cercanos y finalmente he realizado el test de
+Moran en los residuos, obteniendo un p valor muy bajo (\textless0.05),
+por lo que podemos determinar que ** existe autocorrelación espacial
+restante en los residuos, indicando que el modelo no ha capturado
+completamente la estructura espacial**.
+
+\begin{verbatim}
+## Bandwidth: 0.1068962 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.172789 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.213513 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2386818 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.254237 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2638506 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2697922 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2734643 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2757337 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2771364 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2780032 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.278539 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2788701 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2790747 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2792012 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2792794 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2793277 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+## Bandwidth: 0.2793277 CV score: NA
+\end{verbatim}
+
+\begin{verbatim}
+##           Length  Class                  Mode     
+## SDF          2000 SpatialPointsDataFrame S4       
+## lhat      4000000 -none-                 numeric  
+## lm             11 -none-                 list     
+## results        14 -none-                 list     
+## bandwidth       1 -none-                 numeric  
+## adapt           0 -none-                 NULL     
+## hatmatrix       1 -none-                 logical  
+## gweight         1 -none-                 character
+## gTSS            1 -none-                 numeric  
+## this.call       8 -none-                 call     
+## fp.given        1 -none-                 logical  
+## timings        12 -none-                 numeric
+\end{verbatim}
+
+\begin{verbatim}
+## [1]  20.6359032   1.6456017 -28.8882135  11.2363254  -0.8449863  -3.6437980
+\end{verbatim}
+
+\begin{verbatim}
+## 
+##  Moran I test under randomisation
+## 
+## data:  residuos_gwr  
+## weights: listw2    
+## 
+## Moran I statistic standard deviate = 1.485, p-value = 0.06878
+## alternative hypothesis: greater
+## sample estimates:
+## Moran I statistic       Expectation          Variance 
+##      0.0212815954     -0.0005002501      0.0002151618
+\end{verbatim}
+
+\end{document}

@@ -1,0 +1,264 @@
+---
+title: "M5_AI4_CANOJORGE"
+author: "JORGE CANO"
+date: "2024-10-25"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+library(ggplot2)
+
+#install.packages("spdep")
+library(spdep)
+
+library(readr)
+
+#install.packages("geosphere")
+library(geosphere)
+library(dplyr)
+library (MPV)
+library(lmtest)
+
+
+```
+
+## EJERCICIOS
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+df <- table.b3[-c(23.25), ]
+
+#Inicializo las variables
+n <- nrow(df)
+m <- ncol(df) - 3 #no tengo en cuenta x1 no lineal
+m_name <- colnames(dplyr::select(df,-y))
+old_m <- rep(NA,length(m_name))
+modelos <- data.frame()
+formula_min <- ""
+k=0.05
+
+#Bucle para recorrer las posibles variables
+for (i in 1:m) {
+
+U <- c(0)
+ncol <- length(m_name)
+
+for (m_var in 1:ncol){
+
+remaining_var <- paste0(m_name[m_var], collapse="+")
+formula_str <- remaining_var
+if (formula_min!="") {
+formula_str <- paste(formula_min, remaining_var, sep = "+")
+}
+
+#Creo un modelo
+formula_i <- as.formula(paste0("y~",formula_str))
+mod_i <- glm(formula=formula_i, data=df, family = gaussian)
+m_num <- length(mod_i$coefficients) - 1
+pred <- predict(mod_i,df,type="response")
+
+#Formula a minimizar
+U[m_var] <- (sum((df$y - pred)**2))**0.5 / ((sum(df$y**2))**0.5 + (sum(pred**2))**0.5 ) + k * m_num
+}
+
+#Almaceno el resultado
+Umin <- which.min(U)
+old_m[i] <- m_name[Umin]
+m_name <- m_name[-Umin]
+formula_min <- paste0(old_m[(!is.na(old_m))], collapse="+")
+
+modelos[i,1] <- formula_min
+modelos[i,2] <- U[Umin]
+}
+
+#Resultado
+modelos[which.min(modelos$V2),]
+
+
+```
+
+## 1. Proponed una especificación que a vuestra intuición sea un buen modelo para explicar la variable y en base a las x que tenemos anteriormente.
+
+# Resulta dificil estimar una especificación con la variable obtenidas, únicamente x1 parece representativa en el modelo, por tanto, a pesar de ser sencillo, vamos a proponer un glm (y ~ x1) y en pasos siguiente iremos explorando diferentes posibilidades para ampliar las variables y mejorar la especificad del modelo.
+
+# Para quedarnos únicamente con x1 he realizado un análisis de los errores y p-valor, no siendo significativo para el resto de variable. Otra prueba de contraste ha consistido en analizar el AIC, siendo mejor con este modelo planteado.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+df <- table.b3[-c(23, 25), ]
+
+formula<-as.formula('y ~ x1')
+
+logit_model_simple <- glm(formula =formula, data = df, family = gaussian)
+summary(logit_model_simple)
+
+BIC(logit_model_simple)
+
+```
+
+## 2. Utilizar la técnica STEPWISE para elegir el modelo de tal forma que minimicemos el BIC.
+
+# Si aplicamos la técnica STEPWISE vemos como nos devuelve un modelo simplificado en número de variables (y~ x1 + x4), dónde no podemos considerar significativa x4, pue presenta un p valor elevado (0.273). Hacemos un análisis de los residuos para entender como se comportan.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+
+# Modelo completo con todas las variables predictoras
+full_model <- lm(y ~ ., data = df)
+
+# Modelo nulo (sin predictores, solo el intercepto)
+null_model <- lm(y ~ 1, data = df)
+
+# Selección stepwise usando el modelo completo como punto de partida
+stepwise_model <- step(null_model, 
+                       scope = list(lower = null_model, upper = full_model), 
+                       direction = "both")
+                       
+# Resumen del modelo resultante
+summary(stepwise_model)
+BIC(stepwise_model)
+
+
+```
+
+# Grafico residuos vs. valores ajustados
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+#plot(stepwise_model$fitted.values, resid(stepwise_model))
+
+#Residuos
+residuals <- resid(stepwise_model)
+
+# Calcular los valores ajustados
+fitted_values <- fitted(stepwise_model)
+
+
+plot(fitted_values, residuals, 
+     xlab = "Valores ajustados", 
+     ylab = "Residuos",
+     main = "Residuos vs. Valores ajustados")
+abline(h = 0, col = "red", lty = 2)
+
+
+```
+# Gráfico Q-Q de los residuos
+```{r, fig.width=6, fig.height=4, echo=FALSE}
+
+qqnorm(residuals, main = "Gráfico Q-Q de los residuos")
+qqline(residuals, col = "red")
+
+```
+# Histograma de los residuos
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+
+hist(residuals, breaks = 10, col = "lightblue", 
+     main = "Histograma de los residuos", xlab = "Residuos")
+
+```
+
+# No se rechaza la hipótesis nula de homocedasticidad (es decir, la varianza de los errores parece ser constante), pero el valor p cercano a 0.05 sugiere que podrías estar atento a posibles signos de heterocedasticidad en el modelo.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Instalar y cargar el paquete 'lmtest' para la prueba de Breusch-Pagan
+#install.packages("lmtest")
+
+# Prueba de Breusch-Pagan
+bptest(stepwise_model)
+
+```
+
+## 3. Programad vuestro propio STEPWISE (Backward o Forward) para decidir cuál sería el mejor modelo minimizando la siguiente función: 
+
+# El mejor modelo correspondría a --> y ~ x1
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# Definir el modelo base con la combinación óptima
+base_model <- glm(y ~ x1 + x6, data = df, family = gaussian)
+
+# Usar step() a partir del modelo base
+stepwise_model_2 <- step(base_model, scope = ~ ., direction = "both")
+summary(stepwise_model_2)
+
+
+```
+
+
+## 4. Probad a variar el 0.05 para elegir un modelo según vuestra visión. 
+
+# Tras varias iteracciones, ajustamos el k=0.001 (prácticamente nula penalización), obteniendo un modelo (y~x1+x6+x4+x9+x8+x10+x5). En mi opinión, la mejora en el modelo no justifica el incremente de variable que hemos introducido. Por tanto, una vez iterado con el valor de K, podemos defender que un valor igual a 0.05 es óptimo para encontrar un equilibrio.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+#Inicializo las variables
+n <- nrow(df)
+m <- ncol(df) - 3 #no tengo en cuenta x1 no lineal
+m_name <- colnames(dplyr::select(df,-y))
+old_m <- rep(NA,length(m_name))
+modelos <- data.frame()
+formula_min <- ""
+k=0.001
+
+#Bucle para recorrer las posibles variables
+for (i in 1:m) {
+
+U <- c(0)
+ncol <- length(m_name)
+
+for (m_var in 1:ncol){
+
+remaining_var <- paste0(m_name[m_var], collapse="+")
+formula_str <- remaining_var
+if (formula_min!="") {
+formula_str <- paste(formula_min, remaining_var, sep = "+")
+}
+
+#Creo un modelo
+formula_i <- as.formula(paste0("y~",formula_str))
+mod_i <- glm(formula=formula_i, data=df, family = gaussian)
+m_num <- length(mod_i$coefficients) - 1
+pred <- predict(mod_i,df,type="response")
+
+#Formula a minimizar
+U[m_var] <- (sum((df$y - pred)**2))**0.5 / ((sum(df$y**2))**0.5 + (sum(pred**2))**0.5 ) + k * m_num
+}
+
+#Almaceno el resultado
+Umin <- which.min(U)
+old_m[i] <- m_name[Umin]
+m_name <- m_name[-Umin]
+formula_min <- paste0(old_m[(!is.na(old_m))], collapse="+")
+
+modelos[i,1] <- formula_min
+modelos[i,2] <- U[Umin]
+}
+
+#Resultado
+modelos[which.min(modelos$V2),]
+
+```
+# si aplicamos este modelo propuesto con penalización k=0.01 en un stepwise vemos como la mejor especificación corresponde a y ~ x8 + x10 + x5, con un menor AIC y unos p-valor significativos.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Usar step() a partir del modelo base
+
+base_model_2 <- glm(y ~ x1+x6+x4+x9+x8+x10+x5, data = df, family = gaussian)
+
+stepwise_model_3 <- step(base_model_2, scope = ~ ., direction = "both")
+summary(stepwise_model_3)
+
+```
+
+
+## 5. En función de los modelos anteriores, ¿cuál de ellos en el caso de que difieran recomendaríais?
+
+# Analaizadas diferentes iteraciones con penalizaciones, sus AIC y la significancia de las variables en el modelo, mi propuesta sería simplicar el modelo con (y~x1), pero esto podría llevar al riesgo de simplificar excesivamente el modelo y omitir información importante, lo que puede llevar a sesgos, falta de robustez y problemas en la interpretación.
+
+# Por eso, y a pesar de obtener un peor BIC/AIC me quedaría con el modelo y ~ x8 + x10 + x5 limitando la penalización de inclusión de variable a una valor k muy bajo (0.001), reduciendo el sesgo y tratando de evitar de esta forma las posibles limitaciones de simplicar un modelo a una variable.
+
+
+

@@ -1,0 +1,227 @@
+---
+title: "Untitled"
+author: "Yasmin Al Omar y Jorge Cano"
+date: "2024-10-26"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+#Lectura de la base de datos
+affairs <- read.csv("http://www-eio.upc.edu/~pau/cms/rdata/csv/COUNT/affairs.csv")
+head(affairs)
+```
+```{r}
+#2.Realizad un modelo de conteos de infidelidades. ¿Son las mismas variables las que afectan respecto al modelo anterior? 
+formula <- as.formula('naffairs ~ kids + vryunhap + unhap + avgmarr + hapavg + vryhap + antirel + notrel + slghtrel + smerel + vryrel + yrsmarr1 + yrsmarr2 + yrsmarr3 + yrsmarr4 + yrsmarr5 + yrsmarr6 ')
+modelo_lineal <- glm(formula = formula, data = affairs, family = gaussian)
+summary(modelo_lineal)
+```
+```{r}
+formula <- as.formula('naffairs ~ kids + vryunhap + unhap + avgmarr + hapavg + vryhap + antirel + notrel + slghtrel + smerel + vryrel + yrsmarr1 + yrsmarr2 + yrsmarr3')
+modelo_lineal1 <- glm(formula = formula, data = affairs, family = gaussian)
+summary(modelo_lineal1)
+```
+
+```{r}
+#Calculad la frecuencia de infidelidades de una persona con más de 10 años de matrimonio, no-religioso, sin hijos. Sin saber el grado de satisfacción con el matrimonio. 
+valores_10matr_norel_sinhijos <- data.frame(kids = 0, vryunhap = 0, unhap = 0, avgmarr = 0, hapavg = 0, vryhap = 0, antirel = 1, notrel = 1, slghtrel = 0, smerel = 0, vryrel = 0, yrsmarr1 = 0, yrsmarr2 = 0, yrsmarr3 = 0, yrsmarr4 = 0, yrsmarr5 = 1, yrsmarr6 = 0)
+prediccion_frecuencia_affairs <- predict(modelo_lineal1, newdata = valores_10matr_norel_sinhijos , type = "response")
+prediccion_frecuencia_affairs
+mean(affairs$naffairs)
+
+
+```
+```{r}
+#¿Podríais calcular el 95% de confianza de la estimación anterior?
+prediccion_frecuencia_affairs <- predict(modelo_lineal1, newdata = valores_10matr_norel_sinhijos , se.fit = TRUE)
+log_fit <- prediccion_frecuencia_affairs$fit
+log_se <- prediccion_frecuencia_affairs$se.fit
+limite_inferior <- exp(log_fit - 1.96 * log_se)
+limite_superior <- exp(log_fit + 1.96 * log_se)
+print(limite_inferior)
+print(limite_superior)
+
+```
+
+## 6. Calculad, bajo qué nivel de confianza, los residuos de la distribución pueden considerarse normales.
+
+# Primero calculamos los residuos y los valores ajustados
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+#Residuos
+residuals <- resid(modelo_lineal1)
+
+# Calcular los valores ajustados
+fitted_values <- fitted(modelo_lineal1)
+
+```
+
+# Mediante el test de shapiro vemos si rechazamos los residuos al 95% de confianza
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# test de Shapiro-Wilk
+shapiro_test <- shapiro.test(residuals)
+
+# Resultado del test
+print(shapiro_test)
+
+# Interpretación
+if (shapiro_test$p.value > 0.05) {
+    cat("No se rechaza la normalidad de los residuos al 95% de confianza.\n")
+} else {
+    cat("Se rechaza la normalidad de los residuos al 95% de confianza.\n")
+}
+
+
+```
+
+# y finalmente lo contrastamos con la representación gráfica
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+
+plot(fitted_values, residuals, 
+     xlab = "Valores ajustados", 
+     ylab = "Residuos",
+     main = "Residuos vs. Valores ajustados")
+abline(h = 0, col = "red", lty = 2)
+
+qqnorm(residuals, main = "Gráfico Q-Q de los residuos")
+qqline(residuals, col = "red")
+
+
+```
+
+# En el gráfico de Q-Q (quantile-quantile) de los residuos, podemos observar cómo se comparan los cuantiles de los residuos con los cuantiles de una distribución normal teórica. Visualmente podemos contrastar que los extremos presentan una fuerte desviación general del ajuste normal.
+
+
+## 7. Calculad si la combinación de Años de Matrimonio e Hijos da nueva información a nuestro modelo. 
+
+# Para calcular el efecto combinado de tener hijos con cada rango de años de matrimonio aplicaremos un modelo que itere la variable Kids con el resto de varible de años de matrimonio. Hay riesgo de multicolinealidad? lo veremos con los datos...
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# modelo con la interacción entre kids y yrsmarr
+formula_interaccion <- as.formula('naffairs ~ kids * (yrsmarr1 + yrsmarr2 + yrsmarr3 + yrsmarr4 + yrsmarr5 + yrsmarr6) +
+                                  vryunhap + unhap + avgmarr + hapavg + vryhap + antirel + notrel + slghtrel + smerel + vryrel')
+modelo_interaccion <- glm(formula = formula_interaccion, data = affairs, family = gaussian)
+
+
+```
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# Comparar el AIC de los modelos
+AIC(modelo_lineal1, modelo_interaccion)
+
+
+```
+
+# Podemos observar un modelo de AIC muy elevados (>3069 en ambos casos), como consecuencia de la multicolinealidad (Si hay alta correlación entre los predictores, el modelo podría estar estimando coeficientes con poca precisión)
+
+
+## 8. Teniendo la combinación de Años de Matrimonio e Hijos metido en el modelo, ¿cuál sería el cambio en infidelidades de no tener hijos a tener hijos? 
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# resumen del modelo para obtener los coeficientes
+summary(modelo_interaccion)
+
+# coeficientes relevantes
+coef_kids <- coef(modelo_interaccion)["kids"]
+coef_interactions <- coef(modelo_interaccion)[grep("kids:yrsmarr", names(coef(modelo_interaccion)))]
+
+# Calcular el cambio en infidelidades para cada rango de años de matrimonio
+cambio_infidelidades <- coef_kids + coef_interactions
+cambio_infidelidades
+
+
+
+```
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# coeficiente de kids en el modelo
+summary(modelo_interaccion)$coefficients["kids", "Estimate"]
+
+
+```
+
+# El coeficiente de kids indica que, en promedio, tener hijos reduce las infidelidades en 2.218284.
+
+# Sin embargo, los términos de interacción (kids:yrsmarrX) muestran que este efecto varía según la duración del matrimonio:
+#     Para relaciones más cortas (menos de 1.5 años), el efecto de tener hijos es menor, y en algunos casos casi no afecta las infidelidades.
+#     A medida que la duración del matrimonio aumenta, el efecto de tener hijos sobre las infidelidades se vuelve más fuerte, especialmente para parejas con más de 4 o 7 años de matrimonio.
+
+## 9. Calculad una variable que convierta las dummies de años de matrimonio en numérica. Calculad también esta misma variable al cuadrado. ¿En teoría hay alguna edad de matrimonio en la que cada año adicional suponga un descenso de las infidelidades? 
+
+# En primer lugar calculamos una variable numerica para los años de matrimonio y otra que suponga el cuadrado de esta misma.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# variable numérica años de matrimonio
+affairs$years_married <- with(affairs, ifelse(yrsmarr1 == 1, 0.75,
+                           ifelse(yrsmarr2 == 1, 1.5,
+                           ifelse(yrsmarr3 == 1, 4,
+                           ifelse(yrsmarr4 == 1, 7,
+                           ifelse(yrsmarr5 == 1, 10,
+                           ifelse(yrsmarr6 == 1, 15, NA)))))))
+
+# cuadrado de los años de matrimonio
+affairs$years_married_squared <- affairs$years_married^2
+
+
+
+```
+
+# Generamos una nueva regresión lineal incluyendo naffairs ~ kids + years_married + years_married_squared. Vemos que la variable es significativa en el modelo con un p-valor inferior a 0.05.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+formula_2 <- as.formula('naffairs ~ kids + years_married + years_married_squared')
+
+# Ajustar el modelo con las nuevas variables continuas
+modelo_continuo <- lm(formula=formula_2, data = affairs)
+
+# resumen del modelo
+summary(modelo_continuo)
+
+```
+# Por último calculamos un punto de inflexión que nos informa que el valor en los años de matrimonio en el cual el efecto de los años adicionales sobre las infidelidades cambia de dirección. En este caso, alrededor de los 14 años de matrimonio, el efecto de los años adicionales pasa de un posible aumento en infidelidades a una posible reducción.
+
+```{r}
+
+coef_modelo <- coef(modelo_continuo)
+punto_inflexion <- -coef_modelo["years_married"] / (2 * coef_modelo["years_married_squared"])
+punto_inflexion
+
+
+```
+
+
+

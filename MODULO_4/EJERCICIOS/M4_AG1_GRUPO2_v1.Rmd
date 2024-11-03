@@ -1,0 +1,273 @@
+
+---
+title:    "Ejercicio práctico Clustering"
+license:  by-nc-sa
+urlcolor: blue
+output:
+  word_document:  default
+  html_document: 
+    theme:        cosmo 
+    highlight:    tango 
+    toc:          true
+    toc_float:    true
+    code_folding: show
+  epuRate::epurate:
+    toc:             TRUE
+    number_sections: FALSE
+    code_folding:    "show"
+  pdf_document:   default
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+# 1. Planteamiento del problema
+
+Para este ejercicio nos enfocaremos en los negocios que peor lo están pasando con esta crisis, los pequeños negocios. Las pequeñas empresas representan el 99% de todas las empresas en Estados Unidos y casi el 50% del empleo, así que son un motor indispensable para el desarrollo económico. 
+
+Todos los años, la Administración de Pequeñas Empresas de EE.UU. (SBA) publica una informe anual de la actividad de las pequeñas empresas en cada estado. Para este ejercicio, utilizaremos parte de los datos publicados por este organismo público e intentaremos obtener alguna conclusión mediante el Clustering.
+
+El dataset y el diccionario de datos podrás encontrarlo en la carpeta data.
+
+Así pues, lo primero que haremos es cargar el dataset en R:
+
+```{r,warning=FALSE,message=FALSE}
+# Carga paquetes necesarios
+require(factoextra)
+
+library(readr)
+
+# Carga el dataset
+
+# URL Git Datos y Diccionario
+url <- "https://raw.githubusercontent.com/canito91/MBGDS_JC/main/MBGDS_JC/MODULO_4/EJERCICIOS/Data/4.4_Cluster_ejercicio.csv"
+
+data <- "https://raw.githubusercontent.com/canito91/MBGDS_JC/main/MBGDS_JC/MODULO_4/EJERCICIOS/Data/4.4_Cluster_ejercicio_diccionario.csv"
+
+
+# URL con el delimitador
+BBDD <- read_delim(url)
+
+diccionario <- read_csv(data, locale = locale(encoding = "latin1"))
+
+head(BBDD)
+
+#En primer lugar aplico funciones para explorar el dataset
+
+# Estructura del dataset
+str(BBDD)
+
+# Resumen estadístico
+summary(BBDD)
+
+# Vista detallada con skimr
+library(skimr)
+skim(BBDD)
+
+```
+
+## 1.1 Preparación del dataset.
+
+Tal y como podrás comprobar, el dataset tiene una dimensión de 51 observaciones (correspondientes a cada uno de los estados federales de USA) y 16 variables (correspondientes a datos económicos relativos a pequeños negocios). Si necesitas más información acerca de qué significa cada variable, podrás encontrarla en el diccionario de datos.
+
+Tal y como podrás comprobar, existen ciertas variables en las cuales hay asteriscos. Estos representan valores nulos (NA). Por tanto, hay que hacer un tratamiento de estas variables para poder aplicar el clustering.
+
+* **Ejercicio 1**: Reemplaza los valores nulos (asteriscos) por la mediana y transforma las variables tratadas a tipo numerico.
+
+```{r}
+# Reemplazo los valores nulos por la mediana
+
+library(dplyr)
+library(tidyr)
+
+
+# Reemplazar * por NA
+bbdd_ajustada <- BBDD %>%
+  mutate(across(c(AvgEmpPerWOB , AvgEmpPerVOB, AvgEmpPerMOB, ShareProSvcEmploy), ~ na_if(., "*")))
+
+
+# Modifico el tipo de las variables tratadas a numerico
+
+bbdd_ajustada <- bbdd_ajustada %>% mutate_at(c('AvgEmpPerWOB', 'AvgEmpPerVOB','AvgEmpPerMOB','ShareProSvcEmploy'), as.numeric)
+
+bbdd_ajustada <- bbdd_ajustada %>% 
+   mutate_all(~ifelse(is.na(.), median(., na.rm = TRUE), .))
+
+head(bbdd_ajustada)
+
+```
+
+Una vez realizada la imputación de los valores nulos, es necesario que observes el rango de las variables que vas a utilizar para el clustering y valores si es necesario transformarlas o no.
+
+* **Ejercicio 2**: Crea un nuevo dataframe con todas las variables estandarizadas en el cuál cada fila tenga como nombre cada uno de los estados.
+
+```{r}
+# Reescalo las variables creando un nuevo dataframe
+
+str(bbdd_ajustada)
+
+# Añado la variable States como nombre de fila en el nuevo dataframe
+
+# Sumarizo las variables
+
+
+# Separar la columna 'State' del resto de las variables numéricas ya que no es numérica
+states <- bbdd_ajustada$State    
+variables_numericas <- bbdd_ajustada %>%
+  select(-State)
+
+# Estandarizar solo las columnas numéricas
+variables_reescaladas <- scale(variables_numericas)
+
+# Convertir a data frame para añadir nombres de fila
+variables_reescaladas_df <- as.data.frame(variables_reescaladas)
+
+# Añadir los nombres de los estados como nombres de fila
+rownames(variables_reescaladas_df) <- states
+
+# Verificar el resultado
+head(variables_reescaladas_df)
+
+
+```
+
+## 1.2 Creación de los clusters
+
+Una vez disponemos del dataframe preparado, es necesario estimar el número de clusters óptimo. Pese a que puede ser un proceso subjetivo, existen algunos métodos que pueden ayudarnos a tomar la decisión.
+
+* **Ejercicio 3**: Elige el número de clusters óptimos mediante el método elbow. ¿Observas algún otro número que también podría ser óptimo? Justifica tu respuesta.
+
+```{r}
+# Visualización del elbow method
+
+fviz_nbclust(x = variables_reescaladas_df, FUNcluster = kmeans, method = "wss", k.max = 20, 
+             diss = get_dist(variables_reescaladas_df, method = "euclidean"), nstart = 50)
+
+print('Analizando el gráfico del codo (elbow metod), nos decantamos por generar 6 clúster, pues es el punto visual, donde la curva empieza a cobrar menor pendiente. En función de las necesidades del estudio, podríamos ampliar el número de clúster, para una mejor segmentación, con el punto negativo de adquirir una mayor complejidad a la hora de explicar las categorías o segmentos.')
+
+```
+
+* **Ejercicio 4**: Elige el número de clusters óptimos mediante la representación del dendrograma. ¿Observas algún otro número que también podría ser óptimo? Justifica tu respuesta.
+
+```{r}
+library(factoextra)
+# Visualización del dendrograma
+
+set.seed(101)
+hc_euclidea_completo <- hclust(d = dist(x = variables_reescaladas_df, method = "euclidean"),
+                               method = "complete")
+
+fviz_dend(x = hc_euclidea_completo, cex = 0.5, main = "Linkage completo",
+          sub = "Distancia euclídea") +
+  theme(plot.title =  element_text(hjust = 0.5, size = 15))
+
+print('La selección del número de clúster vendría condicionada por la necesidad del estudio. Analizando el dendrograma, propondríamos una partición en 6 clústers. Podríamos ampliar el número de clúster para una segmentación más precisa, pero más compleja de explicar. Para reforzar la respuesta, exponemos los principales inconvenientes (siempre sujeto al estudio y dataset) de seleccionar un número elevado de clúster: 1. Sobreajuste del Modelo, 2.Falta de Interpretación Significativa , 3.Mayor Complejidad ,4.Reducción de la Robustez ,5.Dificultad en la toma de decisiones ,6.Dificultad para visualizar los datos. Una elevada selección de clúster puede estar justificada cuándo nos encontramos antes un alta heterogeneidad en los datos o se necesitan objetivos muy concretos para el estudio en cuestión, como la búsqueda de microsegmentaciones')
+
+```
+
+Una vez tomada la decisión del número de clusters a realizar, procedemos a crear y visualizar los clusters en dos dimensiones.
+
+* **Ejercicio 5**: Crea el número de clusters elegido y representalo en dos dimensiones utilizando la función fviz_cluster.
+
+```{r}
+# Creacion de los clusters
+
+set.seed(123)
+km_clusters <- kmeans(x = variables_reescaladas_df, centers = 6, nstart = 50)
+
+# Visualización de los clusters en 2 dimensiones
+
+fviz_cluster(object = km_clusters, data = variables_reescaladas_df, show.clust.cent = TRUE,
+             ellipse.type = "euclid", star.plot = TRUE, repel = TRUE) +
+  labs(title = "Resultados clustering K-means") +
+  theme_bw() +
+  theme(legend.position = "none")
+
+print('Es relevante comentar, que los dos componentes principales apenas explican una varianza del 40%, siendo considerablemente baja. Para el ejercicio teórico continuaremos con la propuesta, pero en otro entorno, deberíamos reflexionar sobre la baja varianza, pues con una explicabilidad inferior al 85% el modelo no lo podríamos considerar robusto')
+
+```
+
+## 1.3 Interpretación de los clusters
+
+Una vez disponemos de la visualización en dos dimensiones de los estados que pertenecen a cada cluster creado, vamos a la parte interesante, la interpretación de estos.
+
+* **Ejercicio 6**: Elige qué estado consideras que es más representativo de cada cluster. Justifica tu respuesta.
+
+```{r}
+
+print("Para determinar el estado más representativo dentro de cada clúster, trataremos de indentificar visualmente el estado más cercano al centroide de cada clúster.Bajo este criterio, identificamos los siguientes estados")
+
+estados <- c('Maryland','Virginia','Oregon','Hawai','North Dakota','District of Columbia')
+
+tabla_representativa <- as.data.frame(t(estados))
+
+print(tabla_representativa)
+
+
+
+```
+
+
+
+* **Ejercicio 7**: Indexa cada uno de los estados más representativos de cada cluster sobre el dataframe inicial y crea un nuevo tablón de datos en el que únicamente se encuentren estos estados. ¿Qué variables difieren en más en valor entre unos estados y otros?
+
+```{r}
+# Selecciono los estados que quiero ver en un vector
+
+# Creo nuevo dataframe sobre el tablon inicial solo con los estados que quiero ver
+
+# Introduce aquí tu respuesta
+print("Tu respuesta")
+
+```
+
+* **Ejercicio 8**: ¿Cuál de los estados seleccionados en el ejercicio anterior tiene una tasa de desempleo más elevada?
+
+```{r}
+# Introduce aquí tu respuesta
+print("Tu respuesta")
+
+```
+
+* **Ejercicio 9**: Si el presidente de los Estados Unidos quisiera lanzar una campaña para aumentar el volumen de exportaciones de pequeños negocios hacia el exterior sobre los estados que menos exportan del país, y con menor valor, qué cluster o clusters le propondrías? (Menciona únicamente el estado que consideres más representativo del cluster)
+
+```{r}
+# Introduce aquí tu respuesta
+print("Tu respuesta")
+
+```
+
+* **Ejercicio 10**: ¿Qué cluster representa mejor a los pequeños negocios con más ingresos?
+
+```{r}
+# Introduce aquí tu respuesta
+print("Tu respuesta")
+
+```
+
+## 1.4 Puntuación del del ejercicio
+
+Este ejercicio se puntuará con 10 puntos, siendo el mínimo necesario para superar la prueba de 5 puntos. 
+La puntuación es la siguiente:
+
+* Ejercicio 1: 0.5 puntos
+
+* Ejercicio 2: 0.5 puntos
+
+* Ejercicio 3: 1 punto
+
+* Ejercicio 4: 1 punto
+
+* Ejercicio 5: 1.5 puntos
+
+* Ejercicio 6: 1 punto
+
+* Ejercicio 7: 1.5 puntos
+
+* Ejercicio 8: 1 punto
+
+* Ejercicio 9: 1 punto
+
+* Ejercicio 10: 1 punto

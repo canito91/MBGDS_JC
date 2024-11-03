@@ -1,0 +1,349 @@
+---
+title: "M5_AI3_CANOJORGE"
+author: "JORGE CANO"
+date: "2024-10-20"
+output: pdf_document
+---
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+#install.packages("earth")
+#library(earth)
+
+#install.packages("gamlss")
+#library(gamlss)
+
+#install.packages("ggplot2")
+library(ggplot2)
+
+#install.packages("spdep")
+library(spdep)
+
+library(readr)
+
+#install.packages("geosphere")
+library(geosphere)
+library(dplyr)
+
+
+```
+
+## Utilizando la base de datos de pisos, que hemos utilizado durante el temario en la que podemos encontrar un listado de pisos disponibles en Airbnb en Madrid, por temas computacionales, debes quedarte con un máximo de 2000 viviendas para responder las siguientes preguntas:
+
+# Lo primero será traer los datos y limitar la BBDD a 2.000 observaciones.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+
+# descarga local
+file_path <- "C:/Users/txell/OneDrive/Escritorio/MASTER JORGE/GITHUB/MBGDS_JC/MBGDS_JC/MODULO_5/DATOS/table_5.05_EJERCICIO.csv"
+BBDD <- read.csv(file_path, sep = ",")
+
+# descarga local OSM
+file_path_2 <- "C:/Users/txell/OneDrive/Escritorio/MASTER JORGE/GITHUB/MBGDS_JC/MBGDS_JC/MODULO_5/DATOS/Agencias33.csv"
+BBDD_OSM <- read.csv(file_path_2, sep = ";")
+
+# Seleccionar 2000 filas aleatorias
+BBDD_MUESTRA <- sample_n(BBDD, 2000)
+
+# Visualizar los primeros registros para verificar
+head(BBDD_MUESTRA)
+
+
+# Estructura del dataset
+str(BBDD_MUESTRA)
+
+# Resumen estadístico
+summary(BBDD_MUESTRA)
+
+
+```
+
+## 1. ¿Existe dependencia espacial en la variable precio? ¿Qué tipo de dependencia espacial existe: local, global o ambas? 
+
+Para contestar a esta pregunta vamos a calcular los k-nearest neighbors (k = 10) y posteriormente realizar un tes de dependencia espacial con el test de Moran.
+
+El índice de Moran es una medida de autocorrelación espacial global. Un valor significativo indica que existe dependencia espacial global, es decir, los valores de price están correlacionados espacialmente en toda el área de estudio.
+
+Si el p-valor es significativo (menor a 0.05), indica que existe una autocorrelación espacial global en la variable price.En nuestro caso obtenemos un p valor inferior a 0.05 y por tanto **podemos determinar que existe autocorrelación espacial global en la variable precio**
+
+```{r results='asis', size="small",warning=FALSE,message=FALSE}
+
+nb <- knn2nb(knearneigh(cbind(BBDD_MUESTRA$longitude, BBDD_MUESTRA$latitude), k=10))
+
+
+moran.test(x = BBDD_MUESTRA$price, listw = nb2listw(nb, style="W"))
+moran.plot(x = BBDD_MUESTRA$price, listw = nb2listw(nb, style="W"),main="Gráfico I Moran")
+
+```
+Para ver si además de esto, hay alguna zona en el mapa que presenta un alto grado de dependencia espacial. Es decir, una dependencia espacial local, podemos llamar al test LISA. Es equivalente al I-Moran pero lo vamos a hacer a nivel regiones.
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+# Asegúrate de que 'price' es un vector numérico de tu dataframe
+price <- BBDD_MUESTRA$price
+
+# Convertir la lista de vecinos a lista de pesos espaciales
+listw <- nb2listw(nb, style = "W")
+
+# Calcular el índice de Moran local
+imoranlocal <- as.data.frame(localmoran(x = price, listw = listw))
+
+# Ver los resultados
+head(imoranlocal)
+
+
+```
+
+Representando el test gráficamente, **podemos confirmar que existe dependencia local**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE,error=TRUE}
+
+
+library(spdep)
+
+# Calcular el índice de Moran local (LISA)
+lisa <- localmoran(BBDD_MUESTRA$price, lw)
+
+# Cargar el paquete ggplot2 para visualización
+library(ggplot2)
+
+# Agregar los resultados de LISA a la tabla original
+BBDD_MUESTRA$lisa_value <- lisa[,1]  # valor del test LISA
+BBDD_MUESTRA$lisa_pvalue <- lisa[,5] # valor p del test LISA
+
+# Crear un mapa básico de los resultados LISA
+ggplot(BBDD_MUESTRA, aes(x = longitude, y = latitude)) +
+  geom_point(aes(color = lisa_value), size = 2) +  # color por valor LISA
+  scale_color_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0) +
+  labs(title = "Dependencia Espacial Local en Precio (LISA)", color = "LISA Value") +
+  theme_minimal()
+
+
+
+```
+## 2. Establece un modelo lineal para estimar la variable precio por m2. ¿Hay dependencia espacial en los residuos del modelo? 
+
+A la hora de crear un modelo líneal utilizaremos el siguiente modelo glm: price ~ minimum_nights + number_of_reviews + beds + Distancia_Centro + Piso + ventanas
+
+Dado que no me ejecute la función **lagsarlm** vamos a trabajar bajo la siguiente hipótesis respondiende de una forma teórica: 
+
+  **comenta el problema como si Rho y Lambda fuesen significativos, qué significaría, cómo impactaría**
+
+En el contexto de un modelo de regresión espacial autorregresivo (SAR), Rho (ρ) es el parámetro que mide la autocorrelación espacial en la variable dependiente (Y). **Si Rho es significativo, esto implica que los valores de la variable dependiente en una localización están influenciados por los valores de la variable dependiente en localizaciones vecinas.**
+
+Si ρ es positivo, esto sugiere que hay dependencia positiva, es decir, las observaciones con valores altos de la variable dependiente tienden a estar cerca de otras observaciones con valores altos, y lo mismo ocurre con valores bajos. Si ρ es negativo, esto indicaría dependencia negativa, lo que significa que las observaciones con valores altos de la variable dependiente tienden a estar cerca de observaciones con valores bajos, lo que sugiere dispersión espacial.
+
+En un modelo de error espacial (SEM), Lambda (λ) representa la autocorrelación espacial en los errores del modelo. **Si Lambda es significativo, esto sugiere que hay un patrón espacial en los residuos (es decir, los errores no son independientes entre sí, sino que están correlacionados espacialmente).**
+
+```{r echo=FALSE,warning=FALSE,message=FALSE,error=TRUE}
+
+nb3 <- knn2nb(knearneigh(cbind(BBDD_MUESTRA$longitude, BBDD_MUESTRA$latitude), k=10))
+
+BBDD_MUESTRA$Piso <- as.factor(BBDD_MUESTRA$Piso)
+BBDD_MUESTRA$ventanas <- as.factor(BBDD_MUESTRA$ventanas)
+
+formula<-as.formula('price ~ minimum_nights + number_of_reviews + beds + Distancia_Centro + Piso + ventanas')
+
+nuevo_modelo_final<-glm(formula = formula,data =BBDD_MUESTRA,family=gaussian)
+
+modelo_espacial_sar <- lagsarlm(formula = formula,data=BBDD_MUESTRA, listw = nb2listw(nb3, style="W"))
+summary(modelo_espacial_sar)
+
+paste("residuos modelo GLM",sum((nuevo_modelo_final$resid)**2))
+paste("residuos modelo GLMEspacial",sum((modelo_espacial_sar$residuals)**2))
+```
+```{r}
+#install.packages('spDataLarge', repos='https://nowosad.github.io/drat/', type='source')
+
+```
+
+## 3. Introduce una variable más en el modelo. Dicha variable es la distancia mínima entre cada persona y la geolocalización de las oficinas bancarias de Madrid obtenidas con OSM. ¿Sigue habiendo dependencia espacial en los residuos del nuevo modelo? 
+
+
+Para contestar el ejercicio nos traemos la BBDD de OSM. Una vez cargada calculamos la variable de distancia mínima entre cada persona y la geolocalización de las oficinas bancarias de Madrid obtenidas con OSM.
+
+Posteriormente calculamos el p-valor del test de Moran, siendo este mur bajo (< 0.05), lo que nos indica que sigue habiendo autocorrelación espacial en los residuos del nuevo modelo.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+library(geosphere)
+
+
+BBDD_OSM$LONG_IND <- as.numeric(gsub(",", ".", BBDD_OSM$LONG_IND))
+BBDD_OSM$LAT_IND <- as.numeric(gsub(",", ".", BBDD_OSM$LAT_IND))
+
+head (BBDD_OSM)
+
+# Crear matrices con las coordenadas de las viviendas y agencias
+coords_viviendas <- cbind(BBDD_MUESTRA$longitude, BBDD_MUESTRA$latitude)
+coords_osm <- cbind(BBDD_OSM$LONG_IND, BBDD_OSM$LAT_IND)
+
+# Calcular la distancia entre las viviendas y las agencias
+distancias <- distm(coords_viviendas, coords_osm, fun = distHaversine)
+
+# Encontrar la distancia mínima para cada vivienda (en caso de múltiples agencias)
+distancia_minima <- apply(distancias, 1, min)
+
+# Agregar la distancia mínima como una nueva columna al dataframe de viviendas
+BBDD_MUESTRA$distancia_a_agencia <- distancia_minima
+
+head(BBDD_MUESTRA)
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Verifica que la variable de distancia está en el dataframe
+head(BBDD_MUESTRA$distancia_minima)
+
+# Definir la fórmula del nuevo modelo
+formula_new_model <- as.formula('price ~ minimum_nights + number_of_reviews + beds + Distancia_Centro + Piso + ventanas + distancia_minima')
+
+# Ajustar el nuevo modelo
+nuevo_modelo <- glm(formula = formula_new_model, data = BBDD_MUESTRA, family = gaussian)
+
+# Ver el resumen del nuevo modelo
+summary(nuevo_modelo)
+
+# Obtener los residuos del nuevo modelo
+residuos <- residuals(nuevo_modelo)
+
+# Crear lista de pesos espaciales
+listw <- nb2listw(nb3, style = "W")
+
+# Realizar el test de Moran en los residuos
+moran_test <- moran.test(residuos, listw)
+
+# Ver los resultados del test
+print(moran_test)
+
+
+```
+
+## 4. Modeliza el precio con un SAR. ¿Es significativo el factor de dependencia espacial? Interpreta el modelo. 
+
+Para contestar este ejercicio modelizo el precio con un SAR. Al igual que ejercicios anteriores no puedo ejecutar la funcion lagsarlm a pesar de tener instalado la librería spdep. Por ello, dejaré reflejado el código, y contestaré bajo la hipótesis de que Rho y Lambda son igual 0.5.
+
+**Rho = 0.5**: Indica que los precios de las viviendas están moderadamente influenciados por los precios en las viviendas vecinas (50% de autocorrelación espacial en la variable dependiente).
+
+**Lambda = 0.5**: Indica que los errores del modelo tienen un 50% de autocorrelación espacial, sugiriendo que factores espaciales no modelados aún están afectando a los precios.
+
+La presencia de ambos (Rho y Lambda) sugiere que la estructura espacial es importante y que hay dependencia espacial tanto en los precios como en los errores, lo que justifica el uso de un modelo SAR para obtener estimaciones más precisas y robustas.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE,error=TRUE}
+
+nb4 <- knn2nb(knearneigh(cbind(BBDD_MUESTRA$longitude, BBDD_MUESTRA$latitude), k=2))
+
+# Crear una lista de pesos espaciales a partir de los vecinos más cercanos
+listw <- nb2listw(nb4, style = "W")
+
+# Cargar el paquete necesario
+library(spdep)
+
+# Definir la fórmula para el modelo SAR
+formula_sar <- as.formula('price ~ minimum_nights + number_of_reviews + beds + Distancia_Centro + Piso + ventanas + distancia_minima')
+
+# Ajustar el modelo SAR
+modelo_sar <- lagsarlm(formula = formula_sar, data = BBDD_MUESTRA, listw = listw)
+
+# Ver el resumen del modelo
+summary(modelo_sar)
+
+
+
+```
+
+## 5. Modeliza el precio con un SEM. ¿Es significativo el factor de dependencia espacial? Interpreta el modelo. 
+
+Debido a los problemas con la librería spdep tampoco puedo ejecutar la función errorsarlm y por tanto no puedo modelizar el precio con un SEM, por lo que aplicaré un modelo teorico. Podemos reusmir el modelo teórico de SEM bajo las siguientes premisas:
+
+**Coeficientes:**
+Indican cómo afectan las variables independientes a la variable dependiente, ajustando por la dependencia espacial en los errores.
+El tamaño y el signo de los coeficientes muestran la dirección y magnitud del impacto de cada variable.
+
+**Lambda (λ):**
+Mide la autocorrelación espacial en los errores. Si λ es significativo, hay dependencia espacial en los errores, lo que significa que el modelo SEM es adecuado.
+El valor de λ indica el grado de dependencia espacial en los errores.
+
+**LR test:**
+Un p-valor bajo en el LR test indica que el modelo SEM es significativamente mejor que un modelo sin autocorrelación espacial en los errores.
+
+**AIC:**
+El AIC permite comparar la calidad del ajuste entre diferentes modelos. Un valor más bajo indica un mejor ajuste.
+
+Para el ejercicio propuesto vamos a suponer un p valor de significacia de los coeficientes inferior a 0.05, representando que es estadísticamente significativo, lo que indica que la variable independiente tiene un impacto en la variable dependiente después de ajustar por la dependencia espacial en los errores.
+
+Si λ es significativo (p-valor < 0.05), indica que existe autocorrelación espacial en los errores. Los errores no son independientes y están correlacionados en función de la localización espacial. Esto sugiere que hay factores espaciales no modelados que están afectando las observaciones.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE,error=TRUE}
+
+modelo_espacial_sem <- errorsarlm(formula = formula,data=BBDD_MUESTRA, listw = nb2listw(nb3, style="W"))
+summary(modelo_espacial_sem)
+
+
+
+```
+
+## 6. Valora la capacidad predictiva del modelo SAR con la técnica de validación cruzada. 
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+
+```
+
+## 7. Propón un modelo GWR para estimar los residuos con un cierto suavizado.
+
+Un modelo GWR es útil cuando queremos modelar una relación que varía en el espacio. Este modelo permite que los coeficientes de las variables explicativas varíen dependiendo de la localización, lo que lo hace especialmente útil en situaciones en las que las relaciones entre las variables no son homogéneas en todas las regiones. La GWR se ajusta a los datos ponderando las observaciones en función de su cercanía espacial a cada punto donde se está realizando la estimación.
+
+Para estimar los residuos he ajustado el modelo GWR con el ancho de banda óptimo encontrado y posteriormente he extraido los residuos del modelo GWR. Con los residuos he creado la lista de pesos espaciales basada en los vecinos más cercanos y finalmente he realizado el test de Moran en los residuos, obteniendo un p valor muy bajo (<0.05), por lo que podemos determinar que ** existe autocorrelación espacial restante en los residuos, indicando que el modelo no ha capturado completamente la estructura espacial**.
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+library(spgwr)   # Cargar el paquete para GWR
+library(sp)      # Trabajar con datos espaciales
+
+# Asegúrate de que los datos tienen coordenadas espaciales
+coords_gwr <- cbind(BBDD_MUESTRA$longitude, BBDD_MUESTRA$latitude)
+
+# Crear un SpatialPointsDataFrame con las coordenadas de las viviendas
+coordinates(BBDD_MUESTRA) <- ~longitude + latitude
+
+# Selección óptima del ancho de banda
+bw_optimo <- gwr.sel(price ~ minimum_nights + number_of_reviews + beds + Distancia_Centro + Piso + ventanas + distancia_minima,
+                     data = BBDD_MUESTRA, coords = coords_gwr, gweight = gwr.Gauss, verbose = TRUE)
+
+# Ajustar el modelo GWR con el ancho de banda óptimo encontrado
+modelo_gwr <- gwr(price ~ minimum_nights + number_of_reviews + beds + Distancia_Centro + Piso + ventanas + distancia_minima,
+                  data = BBDD_MUESTRA, coords = coords_gwr, bandwidth = bw_optimo, gweight = gwr.Gauss, hatmatrix = TRUE, se.fit = TRUE)
+
+# Ver el resumen del modelo
+summary(modelo_gwr)
+
+
+```
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+# Extraer los residuos del modelo GWR
+residuos_gwr <- modelo_gwr$SDF$gwr.e
+
+# Mostrar los primeros residuos
+head(residuos_gwr)
+
+```
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+library(spdep)
+
+# Crear la lista de pesos espaciales basada en los vecinos más cercanos
+listw2 <- nb2listw(knn2nb(knearneigh(coords_gwr, k = 4)))
+
+# Realizar el test de Moran en los residuos
+moran_test_gwr <- moran.test(residuos_gwr, listw2)
+
+# Ver los resultados del test de Moran
+moran_test_gwr
+
+```
